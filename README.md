@@ -143,3 +143,30 @@ Made with ♥ by <a href="https://josephgoksu.com/">Joseph Göksu</a>
 
 [![Star History Chart](https://api.star-history.com/svg?repos=josephgoksu/prime-nestjs&type=Timeline)](https://star-history.com/#josephgoksu/prime-nestjs&Timeline)
 
+
+# Generate PRIVATE AND PUBLIC Keys
+
+Generate the Private Key and Output It to the Terminal
+
+```bash
+# It needs be copied&pasted from terminal manually
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -outform PEM
+```
+Explanation:
+
+openssl genpkey: Generates a private key.
+-algorithm RSA: Specifies the RSA algorithm.
+-pkeyopt rsa_keygen_bits:2048: Sets the key size to 2048 bits.
+-outform PEM: Outputs the key in PEM format to the terminal.
+
+
+```bash
+# You can generate the public key by piping the private key directly into the openssl rsa command:
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -outform PEM | openssl rsa -pubout -outform PEM
+```
+
+Explanation:
+
+The first part generates the private key as before.
+The pipe (|) sends the private key output directly to the next command.
+openssl rsa -pubout -outform PEM: Extracts the public key from the private key and outputs it in PEM format.

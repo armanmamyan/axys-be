@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UsersDTO } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 
 // This should be a real class/interface representing a user entity
@@ -9,26 +8,35 @@ import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private readonly usersRepository: Repository<User>) {}
+  constructor(
+    @InjectRepository(User) 
+    private readonly usersRepository: Repository<User>
+  ) {}
 
-  create(createUserDto: UsersDTO): Promise<User> {
-    const user = new User();
-
-    user.name = createUserDto.name;
-    user.email = createUserDto.email;
-    user.password = createUserDto.password;
-
-    return this.usersRepository.save(user);
+  async create(createUser: Partial<User>): Promise<User> {
+    return await this.usersRepository.save(new User(createUser));
   }
 
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
   }
 
-  findOne(email: string): Promise<User> {
-    return this.usersRepository.findOne({
-      email: email,
+  async findUser(email: string): Promise<User> {
+    return await this.usersRepository.findOne({
+      where: { email },
+      select: ['avatar', 'email', 'id', 'kycStatus', 'name', 'surName', 'username', 'onBoarding']
     });
+  }
+
+  // Get all user information
+  async findOne(email: string): Promise<User> {
+    return await this.usersRepository.findOne({
+      where: { email },
+    });
+  }
+
+  async updateData(userEmail, data) {
+    return await this.usersRepository.update({ email: userEmail }, data); 
   }
 
   async remove(id: string): Promise<void> {

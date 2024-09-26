@@ -2,28 +2,25 @@ import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ScheduleModule } from '@nestjs/schedule';
-import { TasksModule } from './tasks/tasks.module';
 import { AuthModule } from './auth/auth.module';
+import { MailModule } from './mail/mail.module';
 import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import configuration from './config';
-
+import { ConfigModule } from '@nestjs/config';
+import { configValidationSchema } from './config.schema';
+import { typeOrmAsyncConfig } from './config/typeorm.config';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [configuration],
+      envFilePath: [`.env.stage.local`],
+      validationSchema: configValidationSchema
     }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => configService.get('database'),
-      inject: [ConfigService],
-    }),
+    TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
-    TasksModule,
+    MailModule
   ],
   controllers: [AppController],
   providers: [AppService],

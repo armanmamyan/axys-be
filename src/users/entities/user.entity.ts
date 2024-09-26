@@ -1,5 +1,5 @@
+import { Matches, MaxLength, MinLength } from 'class-validator';
 import { Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
-import { Role } from '../enums/role.enum';
 
 @Entity()
 @Unique(['email'])
@@ -7,8 +7,20 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({nullable: true})
   name: string;
+
+  @Column({nullable: true})
+  surName: string;
+
+  @Column({ nullable: true })
+	avatar: string;
+
+  @Matches('^[a-zA-Z0-9]*$')
+	@MaxLength(15)
+	@MinLength(5)
+	@Column({ nullable: true })
+	username: string;
 
   @Column()
   email: string;
@@ -16,13 +28,20 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column({ default: 'Not Passed' })
+  kycStatus: string;
 
-  @Column({
-    type: 'enum',
-    enum: Role,
-    default: Role.standard,
-  })
-  roles: Role[];
+  @Column({nullable: true})
+  referral: string
+
+  @Column({ nullable: true })
+	token: string;
+
+  @Column({ nullable: true })
+	onBoarding: boolean;
+  
+  
+  constructor(user?: Partial<User>) {
+		Object.assign(this, user);
+	}
 }
