@@ -39,7 +39,7 @@ export class User {
 
   @Column({ nullable: true })
 	onBoarding: boolean;
-  
+
   
   constructor(user?: Partial<User>) {
 		Object.assign(this, user);

@@ -17,7 +17,7 @@ export class AuthController {
     private authService: AuthService,
   ) {}
 
-  @Post("/signin")
+  @Post("/sign-in")
   signin(
     @Body() signinDto: SigninDto
   ): Promise<Partial<User>> {

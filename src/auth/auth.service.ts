@@ -50,7 +50,7 @@ export class AuthService {
 		return { isValid: currentUnixTimestamp < decoded.exp };
 	}
 
-  async sendOtp(email: string): Promise<boolean> {
+  async sendOtp(email: string): Promise<{sent: boolean}> {
    try {
     const existingUser = await this.userservice.findUser(email);
     if (existingUser) {
@@ -70,22 +70,27 @@ export class AuthService {
       text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
       html: `<p>Your OTP code is <strong>${otp}</strong>. It will expire in 10 minutes.</p>`,
     });
-    return true;
+
+    return {sent: true};
    } catch (error) {
     console.error('Error During OTP Creation', { error })
    }
   }
 
-  async verifyOtp(email: string, otp: string): Promise<boolean> {
-    // Clean up expired OTPs
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-    await this.otpRepository.delete({ createdAt: LessThan(tenMinutesAgo) });
-
-    const otpEntry = await this.otpRepository.findOne({ where: { email, otp } });
-    if (!otpEntry) {
-      throw new UnauthorizedException('Invalid or expired OTP');
-    }
-    return true
+  async verifyOtp(email: string, otp: string): Promise<{verified: boolean}> {
+   try {
+     // Clean up expired OTPs
+     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
+     await this.otpRepository.delete({ createdAt: LessThan(tenMinutesAgo) });
+ 
+     const otpEntry = await this.otpRepository.findOne({ where: { email, otp } });
+     if (!otpEntry) {
+       throw new UnauthorizedException('Invalid or expired OTP');
+     }
+     return {verified: true}
+   } catch (error) {
+    return {verified: false}
+   }
   }
 
   async login(signinDto: SigninDto): Promise<Partial<User>> {
