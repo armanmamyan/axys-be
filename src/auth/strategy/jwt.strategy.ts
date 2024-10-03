@@ -1,24 +1,24 @@
-import { ExtractJwt, Strategy } from "passport-jwt";
-import { PassportStrategy } from "@nestjs/passport";
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { User } from "src/users/entities/user.entity";
-import { AuthService } from "../auth.service";
-import { UsersService } from "src/users/users.service";
-import * as dotenv from "dotenv";
+import { ExtractJwt, Strategy } from 'passport-jwt'
+import { PassportStrategy } from '@nestjs/passport'
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
+import { User } from 'src/users/entities/user.entity'
+import { AuthService } from '../auth.service'
+import { UsersService } from 'src/users/users.service'
+import * as dotenv from 'dotenv'
 
-dotenv.config({ path: "./.env.stage.local" });
+dotenv.config({ path: './.env.stage.local' })
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private readonly authService: AuthService,
-    private userservice: UsersService,
+    private userservice: UsersService
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: process.env.PRIVATE_KEY,
-    });
+    })
   }
 
   /**
@@ -28,14 +28,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
    */
   async validate(payload: any): Promise<User> {
     // Accept the JWT and attempt to validate it using the user service
-    const user = await this.userservice.findUser(payload.email);
+    const user = await this.userservice.findUser(payload.email)
 
     // If the user is not found, throw an error
     if (!user) {
-      throw new HttpException("Invalid token", HttpStatus.UNAUTHORIZED);
+      throw new HttpException('Invalid token', HttpStatus.UNAUTHORIZED)
     }
 
     // If the user is found, return the user
-    return user;
+    return user
   }
 }

@@ -1,46 +1,46 @@
-import { Matches, MaxLength, MinLength } from "class-validator";
-import { Column, Entity, PrimaryGeneratedColumn, Unique } from "typeorm";
+import { Matches, MaxLength, MinLength } from 'class-validator'
+import { Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm'
 
 @Entity()
-@Unique(["email"])
+@Unique(['email'])
 export class User {
   @PrimaryGeneratedColumn()
-  id: number;
+  id: number
 
   @Column({ nullable: true })
-  name: string;
+  name: string
 
   @Column({ nullable: true })
-  surName: string;
+  surName: string
 
   @Column({ nullable: true })
-  avatar: string;
+  avatar: string
 
-  @Matches("^[a-zA-Z0-9]*$")
+  @Matches('^[a-zA-Z0-9]*$')
   @MaxLength(15)
   @MinLength(5)
   @Column({ nullable: true })
-  username: string;
+  username: string
 
   @Column()
-  email: string;
+  email: string
 
   @Column()
-  password: string;
+  password: string
 
-  @Column({ default: "Not Passed" })
-  kycStatus: string;
-
-  @Column({ nullable: true })
-  referral: string;
+  @Column({ default: 'Not Passed' })
+  kycStatus: string
 
   @Column({ nullable: true })
-  token: string;
+  referral: string
 
   @Column({ nullable: true })
-  onBoarding: boolean;
+  token: string
+
+  @Column({ nullable: true })
+  onBoarding: boolean
 
   constructor(user?: Partial<User>) {
-    Object.assign(this, user);
+    Object.assign(this, user)
   }
 }

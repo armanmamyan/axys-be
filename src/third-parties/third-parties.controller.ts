@@ -1,6 +1,6 @@
-import { Controller } from "@nestjs/common";
+import { Controller } from '@nestjs/common'
 
-@Controller("third-parties")
+@Controller('third-parties')
 export class ThirdPartiesController {
   constructor() {}
 }

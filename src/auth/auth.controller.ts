@@ -1,36 +1,29 @@
-import {
-  Body,
-  Controller,
-  Post,
-  Req,
-  Res,
-  ValidationPipe,
-} from "@nestjs/common";
-import { UsersService } from "src/users/users.service";
-import { AuthService } from "./auth.service";
-import { SigninDto } from "./dto/signin.dto";
-import { User } from "src/users/entities/user.entity";
+import { Body, Controller, Post, Req, Res, ValidationPipe } from '@nestjs/common'
+import { UsersService } from 'src/users/users.service'
+import { AuthService } from './auth.service'
+import { SigninDto } from './dto/signin.dto'
+import { User } from 'src/users/entities/user.entity'
 
-@Controller("auth")
+@Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
-  @Post("/sign-in")
+  @Post('/sign-in')
   signin(@Body() signinDto: SigninDto): Promise<Partial<User>> {
-    return this.authService.login(signinDto);
+    return this.authService.login(signinDto)
   }
 
-  @Post("/send-otp")
+  @Post('/send-otp')
   async sendOtp(@Body() body: any) {
-    const { email } = body;
-    const res = await this.authService.sendOtp(email);
-    return res;
+    const { email } = body
+    const res = await this.authService.sendOtp(email)
+    return res
   }
 
-  @Post("/verify-otp")
+  @Post('/verify-otp')
   async verifyOtp(@Body() body: any) {
-    const { email, otp } = body;
-    const verifyOTP = await this.authService.verifyOtp(email, otp);
-    return verifyOTP;
+    const { email, otp } = body
+    const verifyOTP = await this.authService.verifyOtp(email, otp)
+    return verifyOTP
   }
 }
