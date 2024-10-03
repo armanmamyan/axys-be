@@ -24,6 +24,7 @@
     "@fireblocks/ts-sdk": "^4.0.0",
     "@hapi/joi": "^17.1.1",
     "@nestjs-modules/mailer": "^2.0.2",
+    "@nestjs/axios": "^3.0.3",
     "@nestjs/common": "^10.4.3",
     "@nestjs/config": "^3.2.3",
     "@nestjs/core": "^10.4.3",
@@ -35,6 +36,7 @@
     "@nestjs/swagger": "^7.4.2",
     "@nestjs/typeorm": "^10.0.2",
     "@sendgrid/mail": "^8.1.3",
+    "axios": "^1.7.7",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
@@ -79,5 +81,6 @@
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.6.2"
-  }
+  },
+  "packageManager": "pnpm@9.9.0+sha512.60c18acd138bff695d339be6ad13f7e936eea6745660d4cc4a776d5247c540d0edee1a563695c183a66eb917ef88f2b4feb1fc25f32a7adcadc7aaf3438e99c1"
 }
