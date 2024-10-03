@@ -27,7 +27,7 @@ export class UserController {
   private readonly logger = new Logger(UsersService.name);
   constructor(
     private userService: UsersService,
-    private authService: AuthService
+    private authService: AuthService,
   ) {}
 
   @Post("/signup")

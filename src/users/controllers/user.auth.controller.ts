@@ -29,12 +29,12 @@ export class UserAuthController {
     private readonly userRepository: Repository<User>,
     private userService: UsersService,
     private authService: AuthService,
-    private neogardenNftService: NeogardenNftService
+    private neogardenNftService: NeogardenNftService,
   ) {}
 
   @Post("/update-user")
   async updateUser(
-    @Body() user: Partial<User>
+    @Body() user: Partial<User>,
   ): Promise<User | UnauthorizedException> {
     // Check if there is a user.
     if (!user) {
@@ -71,7 +71,7 @@ export class UserAuthController {
   @Post("/neogarden/nfts-by-wallet")
   async getNftsByWallet(
     @GetUser() user: User,
-    @Body() getNftsByWalletDto: GetNftsByWalletDto
+    @Body() getNftsByWalletDto: GetNftsByWalletDto,
   ) {
     const { walletAddress, pageNo, limit } = getNftsByWalletDto;
 
@@ -79,7 +79,7 @@ export class UserAuthController {
       const nfts = await this.neogardenNftService.getNftsByWallet(
         walletAddress,
         pageNo,
-        limit
+        limit,
       );
       return nfts.data;
     } catch (error) {

@@ -19,9 +19,8 @@ export class NeogardenNftService {
 
     try {
       const response = await firstValueFrom(
-        this.httpService.post(url, data, { headers })
+        this.httpService.post(url, data, { headers }),
       );
-      console.log("response", response.data);
       return response.data;
     } catch (error) {
       console.log("error", error);

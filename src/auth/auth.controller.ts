@@ -13,14 +13,10 @@ import { User } from "src/users/entities/user.entity";
 
 @Controller("auth")
 export class AuthController {
-  constructor(
-    private authService: AuthService,
-  ) {}
+  constructor(private authService: AuthService) {}
 
   @Post("/sign-in")
-  signin(
-    @Body() signinDto: SigninDto
-  ): Promise<Partial<User>> {
+  signin(@Body() signinDto: SigninDto): Promise<Partial<User>> {
     return this.authService.login(signinDto);
   }
 
