@@ -1,8 +1,8 @@
-import { DataSource } from 'typeorm'
-import { env } from 'process'
-import * as dotenv from 'dotenv'
+import { DataSource } from 'typeorm';
+import { env } from 'process';
+import * as dotenv from 'dotenv';
 
-dotenv.config({ path: './.env.stage.local' })
+dotenv.config({ path: './.env.stage.local' });
 
 export const dataSource = new DataSource({
   type: 'postgres',
@@ -22,4 +22,4 @@ export const dataSource = new DataSource({
   },
   synchronize: false,
   dropSchema: false,
-})
+});
