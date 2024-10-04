@@ -13,7 +13,7 @@ import { MailModule } from '../mail/mail.module';
 import { Otp } from './entities/otp.entity';
 import * as dotenv from 'dotenv';
 
-dotenv.config({ path: './.env.stage.local' });
+dotenv.config({ path: './.env' });
 @Module({
   imports: [
     LoggerModule,

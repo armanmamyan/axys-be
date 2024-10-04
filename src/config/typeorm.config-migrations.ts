@@ -1,16 +1,16 @@
 import { DataSource } from 'typeorm';
 import * as dotenv from "dotenv"
 import * as path from "path"
-import { join } from 'path';
 
+dotenv.config({ path: path.resolve(__dirname, `../../.env`) })
 
 export const dataSource = new DataSource({
   type: 'postgres',
-  host: process.env.DB_HOST,
-  port: parseInt(<string>process.env.DB_PORT),
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
+  host: 'localhost',
+  port: 5432,
+  username: 'armanmamyan',
+  password: 'pindparol',
+  database: 'axys-be',
   entities: [__dirname + '/../**/*.entity.ts'],
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
   extra: {

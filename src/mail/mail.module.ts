@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import * as dotenv from 'dotenv';
 
-dotenv.config({ path: './.env.stage.local' });
+dotenv.config({ path: './.env' });
 
 @Module({
   imports: [

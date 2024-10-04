@@ -6,7 +6,7 @@ import { AuthService } from '../auth.service';
 import { UsersService } from 'src/users/users.service';
 import * as dotenv from 'dotenv';
 
-dotenv.config({ path: './.env.stage.local' });
+dotenv.config({ path: './.env' });
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
