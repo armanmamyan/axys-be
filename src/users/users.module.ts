@@ -8,7 +8,11 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ThirdPartiesModule } from 'src/third-parties/third-parties.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User]), forwardRef(() => AuthModule), ThirdPartiesModule],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    forwardRef(() => AuthModule),
+    forwardRef(() => ThirdPartiesModule),
+  ],
   providers: [UsersService],
   controllers: [UserController, UserAuthController],
   exports: [UsersService],
