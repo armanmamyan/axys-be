@@ -17,7 +17,11 @@ dotenv.config({ path: './.env.stage.local' });
 @Module({
   imports: [
     LoggerModule,
-    PassportModule.register({ defaultStrategy: 'jwt', property: 'user', session: false }),
+    PassportModule.register({
+      defaultStrategy: 'jwt',
+      property: 'user',
+      session: false,
+    }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

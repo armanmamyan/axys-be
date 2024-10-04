@@ -9,7 +9,7 @@ import { User } from './entities/user.entity';
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(User) 
+    @InjectRepository(User)
     private readonly usersRepository: Repository<User>
   ) {}
 
@@ -24,7 +24,7 @@ export class UsersService {
   async findUser(email: string): Promise<User> {
     return await this.usersRepository.findOne({
       where: { email },
-      select: ['avatar', 'email', 'id', 'kycStatus', 'name', 'surName', 'username', 'onBoarding']
+      select: ['avatar', 'email', 'id', 'kycStatus', 'name', 'surName', 'username', 'onBoarding'],
     });
   }
 
@@ -36,7 +36,7 @@ export class UsersService {
   }
 
   async updateData(userEmail, data) {
-    return await this.usersRepository.update({ email: userEmail }, data); 
+    return await this.usersRepository.update({ email: userEmail }, data);
   }
 
   async remove(id: string): Promise<void> {

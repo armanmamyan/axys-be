@@ -5,11 +5,13 @@ import { User } from './entities/user.entity';
 import { UserController } from './controllers/user.controller';
 import { UserAuthController } from './controllers/user.auth.controller';
 import { AuthModule } from 'src/auth/auth.module';
+import { ThirdPartiesModule } from 'src/third-parties/third-parties.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
-    forwardRef(() => AuthModule)
+    forwardRef(() => AuthModule),
+    forwardRef(() => ThirdPartiesModule),
   ],
   providers: [UsersService],
   controllers: [UserController, UserAuthController],

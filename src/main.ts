@@ -9,27 +9,27 @@ async function bootstrap() {
   app.useBodyParser('json', { limit: '10mb' });
   app.enableCors();
   app.useGlobalPipes(
-		new ValidationPipe({
-			whitelist: true,
+    new ValidationPipe({
+      whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
-		})
-	);
+    })
+  );
   const config = new DocumentBuilder()
     .setTitle('AXYS API')
     .setDescription('AXYS API')
     .setVersion('1.0')
     .addBearerAuth(
-			{
-				type: 'http',
-				scheme: 'bearer',
-				bearerFormat: 'JWT',
-				name: 'JWT',
-				description: 'Enter JWT token',
-				in: 'Header'
-			},
-			'JWT-auth'
-		)
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'Header',
+      },
+      'JWT-auth'
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

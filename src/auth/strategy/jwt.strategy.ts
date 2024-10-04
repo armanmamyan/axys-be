@@ -11,8 +11,8 @@ dotenv.config({ path: './.env.stage.local' });
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
-    private readonly authService: AuthService, 
-    private userservice: UsersService,
+    private readonly authService: AuthService,
+    private userservice: UsersService
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

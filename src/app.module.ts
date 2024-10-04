@@ -14,13 +14,13 @@ import { typeOrmAsyncConfig } from './config/typeorm.config';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: [`.env.stage.local`],
-      validationSchema: configValidationSchema
+      validationSchema: configValidationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
-    MailModule
+    MailModule,
   ],
   controllers: [AppController],
   providers: [AppService],
