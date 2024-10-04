@@ -1,24 +1,20 @@
 import { DataSource } from 'typeorm';
-import { env } from 'process';
-import * as dotenv from 'dotenv';
+import * as dotenv from "dotenv"
+import * as path from "path"
+import { join } from 'path';
 
-dotenv.config({ path: './.env.stage.local' });
 
 export const dataSource = new DataSource({
   type: 'postgres',
-  host: env.DB_HOST,
-  port: parseInt(<string>env.DB_PORT),
-  username: env.DB_USERNAME,
-  password: env.DB_PASSWORD,
-  database: env.DB_NAME,
+  host: process.env.DB_HOST,
+  port: parseInt(<string>process.env.DB_PORT),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   entities: [__dirname + '/../**/*.entity.ts'],
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
   extra: {
     charset: 'utf8mb4_unicode_ci',
-  },
-  ssl: {
-    ca: env.DB_CA_CERT,
-    rejectUnauthorized: false,
   },
   synchronize: false,
   dropSchema: false,

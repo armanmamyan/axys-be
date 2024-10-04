@@ -9,6 +9,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { configValidationSchema } from './config.schema';
 import { typeOrmAsyncConfig } from './config/typeorm.config';
+import { TransactionsModule } from './transactions/transaction.module';
+import { CardsModule } from './card/card.module';
+import { CardOrdersModule } from './card-orders/card-orders.module';
+import { NotificationsModule } from './notifications/notifications.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -21,6 +25,10 @@ import { typeOrmAsyncConfig } from './config/typeorm.config';
     AuthModule,
     UsersModule,
     MailModule,
+    TransactionsModule,
+    CardsModule,
+    CardOrdersModule,
+    NotificationsModule
   ],
   controllers: [AppController],
   providers: [AppService],

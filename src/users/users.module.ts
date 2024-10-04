@@ -6,12 +6,19 @@ import { UserController } from './controllers/user.controller';
 import { UserAuthController } from './controllers/user.auth.controller';
 import { AuthModule } from 'src/auth/auth.module';
 import { ThirdPartiesModule } from 'src/third-parties/third-parties.module';
+import { CardOrdersModule } from 'src/card-orders/card-orders.module';
+import { CardsModule } from 'src/card/card.module';
+import { TransactionsModule } from 'src/transactions/transaction.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     forwardRef(() => AuthModule),
     forwardRef(() => ThirdPartiesModule),
+    forwardRef(() => CardOrdersModule),
+    forwardRef(() => CardsModule),
+    forwardRef(() => TransactionsModule)
+    
   ],
   providers: [UsersService],
   controllers: [UserController, UserAuthController],

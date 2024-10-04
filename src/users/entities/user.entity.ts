@@ -1,8 +1,11 @@
 import { Matches, MaxLength, MinLength } from 'class-validator';
-import { Column, Entity, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Card } from 'src/card/entities/card.entity';
+import { Notification } from 'src/notifications/entities/notification.entity';
+import { CardOrder } from 'src/card-orders/entities/card-order.entity';
+import { Transaction } from 'src/transactions/entity/transactions.entity';
+import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm';
 
 @Entity()
-@Unique(['email'])
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
@@ -22,7 +25,7 @@ export class User {
   @Column({ nullable: true })
   username: string;
 
-  @Column()
+  @Column({ unique: true })
   email: string;
 
   @Column()
@@ -39,6 +42,25 @@ export class User {
 
   @Column({ nullable: true })
   onBoarding: boolean;
+
+  @OneToMany(() => CardOrder, (cardOrder) => cardOrder.user, {
+    cascade: true,
+    nullable: true,
+  })
+  @JoinColumn()
+  cardOrder: CardOrder;
+
+  @OneToMany(() => Card, (card) => card.user)
+  cards: Card[];
+
+  @OneToMany(() => Transaction, (transaction) => transaction.sender)
+  sentTransactions: Transaction[]
+
+  @OneToMany(() => Transaction, (transaction) => transaction.receiver, { nullable: true })
+  receivedTransactions: Transaction[]
+
+  @OneToMany(() => Notification, (notification) => notification.user)
+  notifications: Notification[];
 
   constructor(user?: Partial<User>) {
     Object.assign(this, user);

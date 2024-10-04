@@ -24,7 +24,8 @@ export class UsersService {
   async findUser(email: string): Promise<User> {
     return await this.usersRepository.findOne({
       where: { email },
-      select: ['avatar', 'email', 'id', 'kycStatus', 'name', 'surName', 'username', 'onBoarding'],
+      select: ['avatar', 'email', 'id', 'kycStatus', 'name', 'surName', 'username', 'onBoarding', 'cardOrder', 'cards'],
+      relations: ['cardOrder']
     });
   }
 
