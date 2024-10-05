@@ -13,11 +13,12 @@ export const dataSource = new DataSource({
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  entities: [__dirname + '/../**/*.entity.ts'],
+  entities: [__dirname + '/../**/*.entity.{js,ts}'],
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
   extra: {
     charset: 'utf8mb4_unicode_ci',
   },
+  ssl: process.env.STAGE === 'prod' ? { rejectUnauthorized: false } : false,
   synchronize: false,
   dropSchema: false,
 });
