@@ -12,11 +12,10 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "typeorm": "node -r ts-node/register ./node_modules/typeorm/cli.js",
+    "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "migration:generate": "pnpm run typeorm -- migration:generate",
     "migration:run": "pnpm run typeorm -- migration:run -d /src/config/typeorm.config-migrations.ts",
-    "migration:revert": "pnpm run typeorm -- migration:revert",
-    "heroku-postbuild": "pnpm run build"
+    "migration:revert": "pnpm run typeorm -- migration:revert"
   },
   "dependencies": {
     "@casl/ability": "^6.7.1",
