@@ -8,6 +8,7 @@ if (process.env.STAGE !== 'prod') {
 
 export const dataSource = new DataSource({
   type: 'postgres',
+  url: process.env.DATABASE_URL,
   host: process.env.DB_HOST,
   port: parseInt(<string>process.env.DB_PORT),
   username: process.env.DB_USERNAME,
