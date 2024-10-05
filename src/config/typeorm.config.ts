@@ -22,7 +22,6 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
 			ssl:
 				process.env.STAGE === 'staging' || process.env.STAGE === 'prod'
 					? {
-							ca: process.env.DB_CA_CERT,
 							rejectUnauthorized: false
 					  }
 					: false
