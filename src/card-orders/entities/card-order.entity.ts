@@ -9,7 +9,6 @@ import {
     ManyToOne,
     OneToOne,
     JoinColumn,
-    CreateDateColumn,
   } from 'typeorm';
 import { PaymentMethod, PaymentPlan } from '../enums';
   
@@ -62,10 +61,10 @@ import { PaymentMethod, PaymentPlan } from '../enums';
     @Column({ type: 'jsonb' })
     paymentReceipt: any;
 
-    @Column({ type: 'jsonb' })
+    @Column({ type: 'jsonb', nullable: true })
     consumedNfts: ConsumedNft[];
 
-    @Column({ type: 'jsonb' })
+    @Column({ type: 'jsonb', nullable: true  })
     designNft: DesignNft;
   
     @Column({ default: OrderStatus.PENDING })
@@ -80,7 +79,7 @@ import { PaymentMethod, PaymentPlan } from '../enums';
     @JoinColumn()
     card: Card;
 
-    @CreateDateColumn()
+    @Column()
     date: Date;
 
     @Column()

@@ -9,17 +9,24 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Otp } from './entities/otp.entity';
 import { LessThan, Repository } from 'typeorm';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-
+  private template;
   constructor(
     @InjectRepository(Otp) private otpRepository: Repository<Otp>,
     private jwtService: JwtService,
     private userservice: UsersService,
     private mailerService: MailerService
-  ) {}
+  ) {
+    const templatePath = path.join(__dirname, '../../templates', 'welcome-email.html');
+    const source = fs.readFileSync(templatePath, 'utf-8');
+    this.template = source
+    
+  }
 
   async generateToken(email: string): Promise<string> {
     const jwtPayload = { email };

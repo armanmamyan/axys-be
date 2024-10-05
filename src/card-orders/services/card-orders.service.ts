@@ -8,6 +8,7 @@ import { UpdateOrderStatusDto } from 'src/card-orders/dto/update-order.dto';
 import { CreateOrderDto } from 'src/card-orders/dto/create-order.dto';
 import { User } from 'src/users/entities/user.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { log } from 'console';
 
 
 @Injectable()
@@ -19,24 +20,28 @@ export class OrdersService {
     private userRepository: Repository<User>,
     private cardsService: CardsService,
     private readonly eventEmitter: EventEmitter2,
+    
   ) {}
 
-  async createOrder(userId: number, createOrderDto: CreateOrderDto): Promise<CardOrder> {
+  async createOrder(userId: number, createOrderDto: CreateOrderDto): Promise<Partial<CardOrder>> {
     const user = await this.userRepository.findOne({
        where: {
         id:  userId
       },
        relations: ['cardOrder']
     });
+    
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    
     const order = await this.cardOrderRepository.create({
       ...createOrderDto,
       user,
       status: OrderStatus.APPROVED,
+      date: new Date()
     });
-
+    
     const nextPaymentDate = new Date(order.date);
 
     if (order.paymentPlan === PaymentPlan.MONTHLY) {
@@ -49,10 +54,11 @@ export class OrdersService {
     await this.cardOrderRepository.save(order);
 
     // Emit Scheduler
-    this.eventEmitter.emit('order.created', order);
+    this.eventEmitter.emit('order.created', order, user.email);
 
+    const { cardCategory, id, cardType, date, deliveryAddress, paymentPlan, paymentReceipt, paymentType, designNft, consumedNfts } = order;
 
-    return order;
+    return { cardCategory, id, cardType, date, deliveryAddress, paymentPlan, paymentReceipt, paymentType, designNft, consumedNfts };
   }
 
   async updateOrderStatus(orderId: number, updateOrderStatusDto: UpdateOrderStatusDto): Promise<CardOrder> {
@@ -80,7 +86,7 @@ export class OrdersService {
   }
 
   async getOrdersDueForPayment(date: Date): Promise<CardOrder[]> {
-    return this.cardOrderRepository.find({
+    return await this.cardOrderRepository.find({
       where: { nextPaymentDate: LessThanOrEqual(date) },
       relations: ['user'],
     });

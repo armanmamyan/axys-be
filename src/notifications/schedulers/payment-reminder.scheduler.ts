@@ -11,12 +11,11 @@ export class PaymentReminderScheduler {
   ) {}
 
   // Runs every day at midnight
-  // EVERY_DAY_AT_MIDNIGHT
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handlePaymentReminders() {
     const today = new Date();
     const orders = await this.ordersService.getOrdersDueForPayment(today);
-
+    
     for (const order of orders) { 
      // Emit event to notify user
       this.eventEmitter.emit('payment.reminder', order);

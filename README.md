@@ -89,7 +89,7 @@ openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -outform PEM | open
 ```
 
 # Generate Migration
-npm run migration:generate -- src/migrations/name_of_migration -d src/config/typeorm.config-migrations.ts
+pnpm run migration:generate -- src/migrations/name_of_migration -d src/config/typeorm.config-migrations.ts
 
 # Run migration
 pnpm migration:run                

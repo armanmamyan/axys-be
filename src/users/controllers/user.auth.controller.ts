@@ -58,14 +58,12 @@ export class UserAuthController {
   }
 
   @Post('/apply-card')
-	@UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
-	async applyCard(@Body() body: CreateOrderDto, @GetUser() user: User) {
+	async applyCard(@Body() body, @GetUser() user: User) {
 		const userId = user.id;
 		return await this.ordersService.createOrder(userId, body);
 	}
 
 	@Post('/update-card-order')
-	@UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
 	async updateCardOrder(@Body() body: UpdateOrderStatusDto, @GetUser() user: User) {
 		const userId = user.id;
 		return await this.ordersService.updateOrderStatus(userId, body);

@@ -13,6 +13,8 @@ import { TransactionsModule } from './transactions/transaction.module';
 import { CardsModule } from './card/card.module';
 import { CardOrdersModule } from './card-orders/card-orders.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -22,6 +24,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     }),
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
     ScheduleModule.forRoot(),
+    EventEmitterModule.forRoot(),
     AuthModule,
     UsersModule,
     MailModule,

@@ -10,11 +10,16 @@ export class PaymentReminderListener {
 
   @OnEvent('payment.reminder')
   async handlePaymentReminderEvent(order: CardOrder) {
-    const message = `Dear ${order.user.name || order.user.email}, your monthly payment is due. Please make the payment to continue enjoying our services.`;
+    const message = `Dear ${order.user?.name || order.user?.email}, your monthly payment is due. Please make the payment to continue enjoying our services.`;
     await this.notificationsService.createNotification(
       order.user.email,
       NotificationType.PAYMENT_REMINDER,
       message,
     );
+    await this.notificationsService.sendEmailNotification(
+      order.user.email,
+      NotificationType.PAYMENT_REMINDER,
+      message
+    )
   }
 }

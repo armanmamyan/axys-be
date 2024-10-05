@@ -71,4 +71,8 @@ export class CreateOrderDto {
   @ValidateNested()
   @Type(() => PaymentDetailsDto)
   paymentDetails: PaymentDetailsDto;
+
+  consumedNfts?: any;
+
+  designNft?: any;
 }
