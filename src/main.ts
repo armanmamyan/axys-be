@@ -36,7 +36,7 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  console.log('process.env.DB_USERNAME', process.env.DB_USERNAME);
+  console.log('process.env.DATABASE_URL', process.env.DATABASE_URL);
 
   await app.listen(process.env.PORT || 3000);
 }
