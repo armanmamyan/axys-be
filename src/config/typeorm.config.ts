@@ -13,7 +13,7 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
 			password: process.env.DB_PASSWORD,
 			database: process.env.DB_NAME,
 			autoLoadEntities: true,
-			entities: [__dirname + '/../**/*.entity.*{.ts,.js}'],
+			entities: [__dirname + '/../**/*.entity.ts'],
 			migrations: [__dirname + '/../migrations/*{.ts,.js}'],
 			extra: {
 				charset: 'utf8mb4_unicode_ci'
@@ -22,7 +22,6 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
 			ssl:
 				process.env.STAGE === 'staging' || process.env.STAGE === 'prod'
 					? {
-							ca: process.env.DB_CA_CERT,
 							rejectUnauthorized: false
 					  }
 					: false
