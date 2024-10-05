@@ -9,8 +9,6 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Otp } from './entities/otp.entity';
 import { LessThan, Repository } from 'typeorm';
-import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class AuthService {
@@ -22,10 +20,6 @@ export class AuthService {
     private userservice: UsersService,
     private mailerService: MailerService
   ) {
-    const templatePath = path.join(__dirname, '../../templates', 'welcome-email.html');
-    const source = fs.readFileSync(templatePath, 'utf-8');
-    this.template = source
-    
   }
 
   async generateToken(email: string): Promise<string> {
@@ -73,8 +67,11 @@ export class AuthService {
       await this.mailerService.sendMail({
         to: email,
         subject: 'Your OTP Code',
-        text: `Your OTP code is ${otp}. It will expire in 10 minutes.`,
-        html: `<p>Your OTP code is <strong>${otp}</strong>. It will expire in 10 minutes.</p>`,
+        template: 'otp',
+        context: {
+          email,
+          otp,
+        },
       });
 
       return { sent: true };

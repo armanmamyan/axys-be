@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
 import * as dotenv from 'dotenv';
+import * as path from 'path';
 
 dotenv.config({ path: './.env' });
 
@@ -16,7 +18,11 @@ dotenv.config({ path: './.env' });
         },
       },
       defaults: {
-        from: process.env.EMAIL_FROM,
+        from: `"AxysBank" ${process.env.EMAIL_FROM}`,
+      },
+      template: {
+        dir: path.join(__dirname, '../templates'),
+        adapter: new EjsAdapter(),
       },
     }),
   ],
