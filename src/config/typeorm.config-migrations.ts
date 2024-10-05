@@ -6,11 +6,11 @@ dotenv.config({ path: path.resolve(__dirname, `../../.env`) })
 
 export const dataSource = new DataSource({
   type: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  username: 'armanmamyan',
-  password: 'pindparol',
-  database: 'axys-be',
+  host: process.env.DB_HOST,
+  port: parseInt(<string>process.env.DB_PORT),
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   entities: [__dirname + '/../**/*.entity.ts'],
   migrations: [__dirname + '/../migrations/*{.ts,.js}'],
   extra: {
