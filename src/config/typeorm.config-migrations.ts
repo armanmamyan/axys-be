@@ -1,8 +1,10 @@
 import { DataSource } from 'typeorm';
-import * as dotenv from "dotenv"
-import * as path from "path"
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 
-dotenv.config({ path: path.resolve(__dirname, `../../.env`) })
+if (process.env.STAGE !== 'prod') {
+  dotenv.config({ path: path.resolve(__dirname, `../../.env`) });
+}
 
 export const dataSource = new DataSource({
   type: 'postgres',
