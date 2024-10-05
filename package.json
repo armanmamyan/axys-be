@@ -16,7 +16,7 @@
     "migration:generate": "pnpm run typeorm -- migration:generate",
     "migration:run": "pnpm run typeorm -- migration:run -d src/config/typeorm.config-migrations.ts",
     "migration:revert": "pnpm run typeorm -- migration:revert",
-    "heroku-postbuild": "npm install -g pnpm && pnpm run build && pnpm run typeorm -- migration:generate && pnpm run typeorm -- migration:run -d src/config/typeorm.config-migrations.ts"
+    "heroku-postbuild": "npm install -g pnpm && pnpm run build"
   },
   "dependencies": {
     "@casl/ability": "^6.7.1",

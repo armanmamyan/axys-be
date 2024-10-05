@@ -13,7 +13,7 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
 			password: process.env.DB_PASSWORD,
 			database: process.env.DB_NAME,
 			autoLoadEntities: true,
-			entities: [__dirname + '/../**/*.entity.ts'],
+			entities: [__dirname + '/../**/*.entity.*{.ts,.js}'],
 			migrations: [__dirname + '/../migrations/*{.ts,.js}'],
 			extra: {
 				charset: 'utf8mb4_unicode_ci'
