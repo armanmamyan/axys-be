@@ -15,8 +15,7 @@
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "migration:generate": "pnpm run typeorm -- migration:generate",
     "migration:run": "pnpm run typeorm -- migration:run -d src/config/typeorm.config-migrations.ts",
-    "migration:revert": "pnpm run typeorm -- migration:revert",
-    "heroku-prebuild": "npm install -g pnpm"
+    "migration:revert": "pnpm run typeorm -- migration:revert"
   },
   "dependencies": {
     "@casl/ability": "^6.7.1",
