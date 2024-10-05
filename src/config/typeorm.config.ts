@@ -19,7 +19,7 @@ export const typeOrmAsyncConfig: TypeOrmModuleAsyncOptions = {
 				charset: 'utf8mb4_unicode_ci'
 			},
 			synchronize: false,
-			ssl: process.env.STAGE === "prod" || process.env.STAGE === "staging" ? { rejectUnauthorized: false } : false,
+			ssl: { rejectUnauthorized: false },
 		};
 	}
 };
