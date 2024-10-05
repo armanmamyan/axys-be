@@ -83,8 +83,8 @@ export class AuthService {
   async verifyOtp(email: string, otp: string): Promise<{ verified: boolean }> {
     try {
       // Clean up expired OTPs
-      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000);
-      await this.otpRepository.delete({ createdAt: LessThan(tenMinutesAgo) });
+      const minuteAgo = new Date(Date.now() - 1 * 60 * 1000);
+      await this.otpRepository.delete({ createdAt: LessThan(minuteAgo) });
 
       const otpEntry = await this.otpRepository.findOne({
         where: { email, otp },
