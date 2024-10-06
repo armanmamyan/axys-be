@@ -20,6 +20,12 @@ export class NeogardenNftService {
         body: JSON.stringify(data),
       });
 
+      if(response.status == 404) {
+        return {
+          message: 'Wallet has no NEOGARDE NFTs included'
+        }
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
