@@ -33,6 +33,7 @@ export class UsersService {
   async findOne(email: string): Promise<User> {
     return await this.usersRepository.findOne({
       where: { email },
+      relations: ['cardOrder']
     });
   }
 
