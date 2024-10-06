@@ -92,4 +92,59 @@ openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -outform PEM | open
 pnpm run migration:generate -- src/migrations/name_of_migration -d src/config/typeorm.config-migrations.ts
 
 # Run migration
-pnpm migration:run                
+pnpm migration:run
+
+
+## To read data from a table in your Heroku PostgreSQL database, you can connect to the database using the Heroku CLI and run SQL queries to retrieve the data
+```bash
+# Log in to heroku cli
+heroku login
+```
+
+```bash
+# Select database
+heroku pg:psql -a axys-app-be
+```
+
+```bash
+# List Tables (Optional): If you're unsure of the table names in your database, you can list all tables by running:
+\dt
+```
+
+```bash
+# Read Data from a Table
+SELECT * FROM "table_name";
+```
+
+## To clear all tables' data, follow these steps using the Heroku CLI and SQL commands.
+```bash
+# Read Data from a Table
+TRUNCATE TABLE "table1", "table2", "table3" CASCADE;
+```
+# OR
+
+```bash
+# Clear All Tables Automatically
+DO $$ DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+    EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' CASCADE;';
+  END LOOP;
+END $$;
+```
+
+
+## Generate migration file based on recent local changes
+
+1. Go to src/config/typeorm.config-migrations.ts
+2. Change  url, host, port, username, password, database to Heroku DB addresses
+3. run 
+```bash
+pnmp run migration:generate
+```
+4. run 
+```bash
+pnpm run migration:run
+```
+5. Push migration file to git
