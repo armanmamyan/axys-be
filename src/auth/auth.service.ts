@@ -93,13 +93,6 @@ export class AuthService {
         throw new UnauthorizedException('Invalid or expired OTP');
       }
 
-      // Send Welcome via email
-      await this.mailerService.sendMail({
-        to: email,
-        subject: 'Welcome to AXYS - Your digital bank is here',
-        template: 'welcome',
-      });
-
       return { verified: true };
     } catch (error) {
       return { verified: false };

@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { Repository, ILike } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { MailerService } from '@nestjs-modules/mailer';
 
 import { User } from '../entities/user.entity';
 
@@ -27,7 +28,8 @@ export class UserController {
   private readonly logger = new Logger(UsersService.name);
   constructor(
     private userService: UsersService,
-    private authService: AuthService
+    private authService: AuthService,
+    private mailerService: MailerService
   ) {}
 
   @Post('/signup')
@@ -53,6 +55,13 @@ export class UserController {
         };
         const storeUser = await this.userService.create(createUser);
         const { id, kycStatus, name, avatar, username, surName } = storeUser;
+
+        // Send Welcome via email
+        await this.mailerService.sendMail({
+          to: email,
+          subject: 'Welcome to AXYS - Your digital bank is here',
+          template: 'welcome',
+        });
         return {
           id,
           email,
