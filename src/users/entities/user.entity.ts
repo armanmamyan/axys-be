@@ -4,6 +4,7 @@ import { Notification } from 'src/notifications/entities/notification.entity';
 import { CardOrder } from 'src/card-orders/entities/card-order.entity';
 import { Transaction } from 'src/transactions/entity/transactions.entity';
 import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { PasswordReset } from '@/auth/entities/passwordReset.entity';
 
 @Entity()
 export class User {
@@ -61,6 +62,9 @@ export class User {
 
   @OneToMany(() => Notification, (notification) => notification.user)
   notifications: Notification[];
+
+  @OneToMany(() => PasswordReset, (passwordReset) => passwordReset.user)
+  passwordResets: PasswordReset[];
 
   constructor(user?: Partial<User>) {
     Object.assign(this, user);

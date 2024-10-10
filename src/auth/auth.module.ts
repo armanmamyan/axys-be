@@ -11,6 +11,7 @@ import { User } from 'src/users/entities/user.entity';
 import { LoggerModule } from 'src/logger/logger.module';
 import { MailModule } from '../mail/mail.module';
 import { Otp } from './entities/otp.entity';
+import { PasswordReset } from './entities/passwordReset.entity';
 import * as dotenv from 'dotenv';
 
 dotenv.config({ path: './.env' });
@@ -32,7 +33,7 @@ dotenv.config({ path: './.env' });
     }),
     forwardRef(() => UsersModule),
     MailModule,
-    TypeOrmModule.forFeature([User, Otp]),
+    TypeOrmModule.forFeature([User, Otp, PasswordReset]),
   ],
   providers: [AuthService, JwtStrategy],
   exports: [AuthService, JwtModule, PassportModule],

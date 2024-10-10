@@ -20,6 +20,25 @@ export class AuthController {
     return res;
   }
 
+  @Post('/forget-password')
+  async forgetPassword(@Body() body: any) {
+    const { email } = body;
+    await this.authService.forgetPasswordOtp(email);
+    return {
+      message:
+        'If your email is registered, you will receive a password reset link.',
+    };
+  }
+
+  @Post('/update-password')
+  async updatePassword(
+    @Body('token') token: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    await this.authService.resetPassword(token, newPassword);
+    return { message: 'Password updated successfully.' };
+  }
+
   @Post('/verify-otp')
   async verifyOtp(@Body() body: any) {
     const { email, otp } = body;

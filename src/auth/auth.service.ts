@@ -1,6 +1,6 @@
-import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { compareSync } from 'bcryptjs';
+import { compareSync, hashSync } from 'bcryptjs';
 import { validate } from 'class-validator';
 import { UsersService } from 'src/users/users.service';
 import { SigninDto } from './dto/signin.dto';
@@ -9,13 +9,17 @@ import { MailerService } from '@nestjs-modules/mailer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Otp } from './entities/otp.entity';
 import { LessThan, Repository } from 'typeorm';
+import { PasswordReset } from './entities/passwordReset.entity';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
-  private template;
   constructor(
     @InjectRepository(Otp) private otpRepository: Repository<Otp>,
+    @InjectRepository(PasswordReset) private passwordResetRepository: Repository<PasswordReset>,
+    @InjectRepository(User) private userRepository: Repository<User>,
+    
     private jwtService: JwtService,
     private userservice: UsersService,
     private mailerService: MailerService
@@ -78,6 +82,64 @@ export class AuthService {
     } catch (error) {
       console.error('Error During OTP Creation', { error });
     }
+  }
+
+  async forgetPasswordOtp(email: string): Promise<any> {
+    try {
+      const existingUser = await this.userservice.findUser(email);
+      if (!existingUser) {
+       return;
+      }
+
+      const token = randomBytes(32).toString('hex');
+      const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes from now
+
+      const passwordReset = this.passwordResetRepository.create({
+        user: existingUser,
+        token,
+        expiresAt,
+      });
+  
+      await this.passwordResetRepository.save(passwordReset);
+
+      // Send OTP via email
+      await this.mailerService.sendMail({
+        to: email,
+        subject: 'Your OTP Code',
+        template: 'reset-password',
+        context: {
+          customerEmail: email,
+          resetLink: `http://localhost:3001/reset-password?token=${token}`
+        },
+      });
+
+    } catch (error) {
+      console.error('Error During Password Reset Creation', { error });
+    }
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<void> {
+    const passwordReset = await this.passwordResetRepository.findOne({
+      where: { token },
+      relations: ['user'],
+    });
+
+    if (!passwordReset) {
+      throw new BadRequestException('Invalid or expired token.');
+    }
+
+    if (passwordReset.expiresAt < new Date()) {
+      throw new BadRequestException('Token has expired.');
+    }
+
+    // Hash the new password
+    const hashedPassword = await hashSync(newPassword, 10);
+    passwordReset.user.password = hashedPassword;
+
+    await this.userRepository.save(passwordReset.user);
+
+    // Delete token
+    await this.passwordResetRepository.delete(passwordReset.id);
   }
 
   async verifyOtp(email: string, otp: string): Promise<{ verified: boolean }> {
