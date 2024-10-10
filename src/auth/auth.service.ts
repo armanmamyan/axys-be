@@ -105,7 +105,7 @@ export class AuthService {
       // Send OTP via email
       await this.mailerService.sendMail({
         to: email,
-        subject: 'Your OTP Code',
+        subject: 'Reset Password',
         template: 'reset-password',
         context: {
           customerEmail: email,
