@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compareSync, hashSync } from 'bcryptjs';
 import { validate } from 'class-validator';
@@ -11,6 +11,9 @@ import { Otp } from './entities/otp.entity';
 import { LessThan, Repository } from 'typeorm';
 import { PasswordReset } from './entities/passwordReset.entity';
 import { randomBytes } from 'crypto';
+import * as dotenv from 'dotenv';
+
+dotenv.config({ path: './.env' });
 
 @Injectable()
 export class AuthService {
@@ -109,7 +112,7 @@ export class AuthService {
         template: 'reset-password',
         context: {
           customerEmail: email,
-          resetLink: `http://localhost:3001/reset-password?token=${token}`
+          resetLink: `${process.env.CLIENT_URL}/reset-password?token=${token}`
         },
       });
 
