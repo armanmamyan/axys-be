@@ -28,10 +28,9 @@ export class OrderListener {
       message
     );
 
-    const { cardCategory, id, cardType, date, deliveryAddress, paymentPlan, paymentReceipt } =
-      order;
-
-    const body: IOrderCreationData = {
+    const { cardCategory, id, cardType, date, deliveryAddress, paymentPlan, paymentReceipt } = order;
+    
+    const body: IOrderCreationData ={
       email: order.user.email,
       deliveryAddress: Object.values(deliveryAddress)?.filter(Boolean).join(', '),
       date,
