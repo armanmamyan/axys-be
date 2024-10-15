@@ -1,4 +1,16 @@
-import { BadRequestException, Body, Controller, Get, Headers, Post, Query, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Put,
+  Query,
+  UnauthorizedException,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
@@ -69,7 +81,7 @@ export class UserAuthController {
     return await this.ordersService.updateOrder(body);
   }
 
-  @Post('/approve-apply-card')
+  @Put('/approve-apply-card')
   async approveApplyCard(@Body() body: ApproveOrderDto, @GetUser() user: User) {
     const { orderId, paymentReceipt } = body;
     const order = await this.ordersService.approveOrder(orderId, paymentReceipt);
