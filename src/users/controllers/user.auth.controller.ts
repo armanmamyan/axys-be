@@ -4,12 +4,9 @@ import {
   Controller,
   Get,
   Post,
-  Put,
   Query,
   UnauthorizedException,
   UseGuards,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -81,7 +78,7 @@ export class UserAuthController {
     return await this.ordersService.updateOrder(body);
   }
 
-  @Put('/approve-apply-card')
+  @Post('/approve-apply-card')
   async approveApplyCard(@Body() body: ApproveOrderDto, @GetUser() user: User) {
     const { orderId, paymentReceipt } = body;
     const order = await this.ordersService.approveOrder(orderId, paymentReceipt);
