@@ -6,10 +6,11 @@ import {
   ValidateNested,
   ValidateIf,
   Length,
-} from "class-validator";
-import { Type } from "class-transformer";
-import { CardCategory, PaymentMethod, PaymentPlan } from "../enums";
-import { IsValidCardType } from "src/validator/isValidCardType.validator";
+  IsOptional,
+} from 'class-validator';
+import { Type } from 'class-transformer';
+import { CardCategory, PaymentType, PaymentPlan } from '../enums';
+import { IsValidCardType } from 'src/validator/isValidCardType.validator';
 
 class DeliveryAddressDto {
   @IsString()
@@ -30,18 +31,18 @@ class DeliveryAddressDto {
 
   @IsString()
   @IsNotEmpty()
-  postalCode: string;
+  zipCode: string;
 
   // Additional fields as needed
 }
 
 class PaymentDetailsDto {
-  @ValidateIf((o) => o.paymentType === PaymentMethod.CREDIT_CARD)
+  @ValidateIf((o) => o.paymentType === PaymentType.CREDIT_CARD)
   @IsString()
   @Length(4, 4)
   last4Digits: string;
 
-  @ValidateIf((o) => o.paymentType === PaymentMethod.CRYPTO)
+  @ValidateIf((o) => o.paymentType === PaymentType.CRYPTO)
   @IsString()
   @IsNotEmpty()
   walletAddress: string;
@@ -54,15 +55,15 @@ export class CreateOrderDto {
   @IsString()
   @IsNotEmpty()
   @IsValidCardType({
-    message: "Invalid card type for the selected card category.",
+    message: 'Invalid card type for the selected card category.',
   })
   cardType: string;
 
   @IsEnum(PaymentPlan)
   paymentPlan: PaymentPlan;
 
-  @IsEnum(PaymentMethod)
-  paymentMethod: PaymentMethod;
+  @IsEnum(PaymentType)
+  paymentType: PaymentType;
 
   @ValidateNested()
   @Type(() => DeliveryAddressDto)
@@ -72,7 +73,9 @@ export class CreateOrderDto {
   @Type(() => PaymentDetailsDto)
   paymentDetails: PaymentDetailsDto;
 
-  consumedNfts?: any;
+  @IsOptional()
+  consumedNfts: any;
 
-  designNft?: any;
+  @IsOptional()
+  designNft: any;
 }

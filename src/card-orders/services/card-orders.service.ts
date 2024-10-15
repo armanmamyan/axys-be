@@ -10,7 +10,6 @@ import { User } from 'src/users/entities/user.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { log } from 'console';
 
-
 @Injectable()
 export class OrdersService {
   constructor(
@@ -19,56 +18,71 @@ export class OrdersService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private cardsService: CardsService,
-    private readonly eventEmitter: EventEmitter2,
-    
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   async createOrder(userId: number, createOrderDto: CreateOrderDto): Promise<Partial<CardOrder>> {
     const user = await this.userRepository.findOne({
-       where: {
-        id:  userId
-      },
-       relations: ['cardOrder']
+      where: { id: userId },
+      relations: ['cardOrder'],
     });
-    
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    
-    const order = await this.cardOrderRepository.create({
+
+    const order = this.cardOrderRepository.create({
       ...createOrderDto,
       user,
-      status: OrderStatus.APPROVED,
-      date: new Date()
+      status: OrderStatus.PENDING,
+      date: new Date(),
     });
-    
-    const nextPaymentDate = new Date(order.date);
 
+    const nextPaymentDate = new Date(order.date);
     if (order.paymentPlan === PaymentPlan.MONTHLY) {
       nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
     } else if (order.paymentPlan === PaymentPlan.ANNUAL) {
       nextPaymentDate.setFullYear(nextPaymentDate.getFullYear() + 1);
     }
     order.nextPaymentDate = nextPaymentDate;
-    
+
     await this.cardOrderRepository.save(order);
 
-    // Emit Scheduler
-    this.eventEmitter.emit('order.created', order, user.email);
-
-    const { cardCategory, id, cardType, date, deliveryAddress, paymentPlan, paymentReceipt, paymentType, designNft, consumedNfts } = order;
-
-    return { cardCategory, id, cardType, date, deliveryAddress, paymentPlan, paymentReceipt, paymentType, designNft, consumedNfts };
+    const {
+      id,
+      cardCategory,
+      cardType,
+      date,
+      deliveryAddress,
+      paymentPlan,
+      paymentType,
+      designNft,
+      consumedNfts,
+    } = order;
+    return {
+      id,
+      cardCategory,
+      cardType,
+      date,
+      deliveryAddress,
+      paymentPlan,
+      paymentType,
+      designNft,
+      consumedNfts,
+    };
   }
 
-  async updateOrderStatus(orderId: number, updateOrderStatusDto: UpdateOrderStatusDto): Promise<CardOrder> {
+  async updateOrderStatus(
+    orderId: number,
+    updateOrderStatusDto: UpdateOrderStatusDto
+  ): Promise<CardOrder> {
     const { status } = updateOrderStatusDto;
 
     const cardOrder = await this.cardOrderRepository.findOne({
-        where: {
-            id: orderId
-        },
-        relations: ['user', 'card']
+      where: {
+        id: orderId,
+      },
+      relations: ['user', 'card'],
     });
     if (!cardOrder) {
       throw new NotFoundException('Order not found');
@@ -85,6 +99,25 @@ export class OrdersService {
     return cardOrder;
   }
 
+  async approveOrder(orderId: number, paymentReceipt: any): Promise<CardOrder> {
+    const order = await this.cardOrderRepository.findOne({
+      where: { id: orderId },
+      relations: ['user', 'card'],
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    order.status = OrderStatus.APPROVED;
+    order.paymentReceipt = paymentReceipt;
+    await this.cardOrderRepository.save(order);
+
+    this.eventEmitter.emit('order.approved', order);
+
+    return order;
+  }
+
   async getOrdersDueForPayment(date: Date): Promise<CardOrder[]> {
     return await this.cardOrderRepository.find({
       where: { nextPaymentDate: LessThanOrEqual(date) },
@@ -95,15 +128,14 @@ export class OrdersService {
   async getOrderById(orderId: number): Promise<CardOrder> {
     return this.cardOrderRepository.findOne({
       where: {
-        id: orderId
-      }
+        id: orderId,
+      },
     });
   }
 
   async autoUpdateOrder(order: CardOrder): Promise<CardOrder> {
     return this.cardOrderRepository.save(order);
   }
-
 
   async getOrdersForPaymentReminder(): Promise<CardOrder[]> {
     // TODO
@@ -132,9 +164,7 @@ export class OrdersService {
 
   private monthDiff(dateFrom: Date, dateTo: Date): number {
     return (
-      dateTo.getMonth() -
-      dateFrom.getMonth() +
-      12 * (dateTo.getFullYear() - dateFrom.getFullYear())
+      dateTo.getMonth() - dateFrom.getMonth() + 12 * (dateTo.getFullYear() - dateFrom.getFullYear())
     );
   }
 }

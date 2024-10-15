@@ -3,7 +3,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Notification, NotificationType } from '../entities/notification.entity';
 import { Repository } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 import { UsersService } from 'src/users/users.service';
 import { MailerService } from '@nestjs-modules/mailer';
 
@@ -58,6 +57,29 @@ export class NotificationsService {
       to: userEmail,
       subject,
       text: message,
+    });
+  }
+
+  async sendReceiptlNotification(
+    userEmail: string,
+    subject: string,
+    body: any
+  ) {
+    await this.mailerService.sendMail({
+      to: userEmail,
+      subject,
+      template: 'payment-receipt',
+      context: {
+        date: body.date,
+        deliveryAddress: body.deliveryAddress,
+        itemName: body.itemName,
+        quantity: 1,
+        price: body.price,
+        orderTotal: body.price * 1,
+        orderLink: body.hash,
+        orderNumber: body.orderNumber,
+        email: userEmail
+      },
     });
   }
 

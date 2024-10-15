@@ -19,7 +19,10 @@ export const dataSource = new DataSource({
   extra: {
     charset: 'utf8mb4_unicode_ci',
   },
-  ssl: process.env.STAGE === 'prod' ? { rejectUnauthorized: false } : false,
-  synchronize: false,
+  ssl:
+    process.env.STAGE === 'prod' || process.env.STAGE === 'staging'
+      ? { rejectUnauthorized: false }
+      : false,
+  synchronize: process.env.STAGE !== 'prod' && process.env.STAGE !== 'staging',
   dropSchema: false,
 });

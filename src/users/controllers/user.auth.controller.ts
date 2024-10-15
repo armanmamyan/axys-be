@@ -1,4 +1,14 @@
-import { BadRequestException, Body, Controller, Get, Post, UnauthorizedException, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  UnauthorizedException,
+  UseGuards,
+  UsePipes,
+  ValidationPipe,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
@@ -10,21 +20,23 @@ import { GetUser } from '../decorators/get-user.decorator';
 import { OrdersService } from 'src/card-orders/services/card-orders.service';
 import { CreateOrderDto } from 'src/card-orders/dto/create-order.dto';
 import { UpdateOrderStatusDto } from 'src/card-orders/dto/update-order.dto';
+import { ApproveOrderDto } from 'src/card-orders/dto/approve-order.dto';
 import { NeogardenNftService } from 'src/third-parties/neogarden-nft/neogarden-nft.service';
 import { GetNftsByWalletDto } from '../dto/get-nfts-by-wallet.dto';
+
 @Controller('user')
 @UseGuards(JwtAuthGuard)
 @ApiTags('User Auth')
 @ApiSecurity('JWT-auth')
 export class UserAuthController {
-	constructor(
-		@InjectRepository(User)
-		private readonly userRepository: Repository<User>,
-		private userService: UsersService,
-		private authService: AuthService,
-		private ordersService: OrdersService,
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private userService: UsersService,
+    private authService: AuthService,
+    private ordersService: OrdersService,
     private neogardenNftService: NeogardenNftService
-	) {}
+  ) {}
 
   @Post('/update-user')
   async updateUser(@Body() user: Partial<User>): Promise<User | UnauthorizedException> {
@@ -58,16 +70,28 @@ export class UserAuthController {
   }
 
   @Post('/apply-card')
-	async applyCard(@Body() body, @GetUser() user: User) {
-		const userId = user.id;
-		return await this.ordersService.createOrder(userId, body);
-	}
+  async applyCard(@Body() body: CreateOrderDto, @GetUser() user: User) {
+    const userId = user.id;
+    return await this.ordersService.createOrder(userId, body);
+  }
 
-	@Post('/update-card-order')
-	async updateCardOrder(@Body() body: UpdateOrderStatusDto, @GetUser() user: User) {
-		const userId = user.id;
-		return await this.ordersService.updateOrderStatus(userId, body);
-	}
+  @Post('/update-card-order')
+  async updateCardOrder(@Body() body: UpdateOrderStatusDto, @GetUser() user: User) {
+    const userId = user.id;
+    return await this.ordersService.updateOrderStatus(userId, body);
+  }
+
+  @Post('/approve-apply-card')
+  async approveApplyCard(@Body() body: ApproveOrderDto, @GetUser() user: User) {
+    const { orderId, paymentReceipt } = body;
+    const order = await this.ordersService.approveOrder(orderId, paymentReceipt);
+
+    if (order.user.id !== user.id) {
+      throw new BadRequestException('You are not authorized to approve this order');
+    }
+
+    return order;
+  }
 
   @Post('/neogarden/nfts-by-wallet')
   async getNftsByWallet(@GetUser() user: User, @Body() getNftsByWalletDto: GetNftsByWalletDto) {
