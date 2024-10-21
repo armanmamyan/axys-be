@@ -97,7 +97,9 @@ export class CreateOrderDto {
   @Type(() => PaymentDetailsDto)
   paymentDetails: PaymentDetailsDto;
 
-  paymentReceipt: any;
+  @ValidateNested()
+  @Type(() => PaymentReceiptDto)
+  paymentReceipt: PaymentReceiptDto;
 
   @IsOptional()
   consumedNfts: any;
