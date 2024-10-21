@@ -126,7 +126,6 @@ export class UserController {
         await this.handlePaymentFailed(event);
         break;
       case 'invoice.payment_succeeded':
-      // case 'payment_intent.succeeded':
         await this.handlePaymentSucceeded(event);
         break;
       case 'invoice.upcoming':
