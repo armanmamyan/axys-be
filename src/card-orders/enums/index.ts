@@ -18,12 +18,12 @@ export enum StandardCardType {
 
 export enum PremiumCardType {
   BLACK_PEARL = 'Black Pearl',
-  ROYAL_GOLD = 'Royal Gold',
+  ROYAL_GOLD = 'Royal Gold (24K)',
 }
 
 export enum NftCardType {
   BLACK_PEARL = 'Black Pearl',
-  ROYAL_GOLD = 'Royal Gold',
+  ROYAL_GOLD = 'Royal Gold (24K)',
   TITANIUM = 'Titanium',
 }
 
