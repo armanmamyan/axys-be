@@ -1,3 +1,4 @@
+import { CardOrder } from '@/card-orders/entities/card-order.entity';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
