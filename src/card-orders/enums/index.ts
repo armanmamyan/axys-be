@@ -14,7 +14,7 @@ export enum CardCategory {
 export enum StandardCardType {
   PURE_WHITE = 'Pure White',
   TITAN_SILVER = 'Titan Silver',
-  REGENT_GOLD = 'Regent Gold',
+  REGENT_GOLD = 'Royal Gold (24K)',
 }
 
 export enum PremiumCardType {
