@@ -24,7 +24,8 @@ export enum PremiumCardType {
 export enum NftCardType {
   BLACK_PEARL = 'Black Pearl',
   ROYAL_GOLD = 'Royal Gold (24K)',
-  TITANIUM = 'Titanium',
+  DIAMOND = 'Diamond',
+  CUSTOM = 'Custom',
 }
 
 export enum PaymentPlan {
