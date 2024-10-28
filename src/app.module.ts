@@ -14,12 +14,14 @@ import { CardsModule } from './card/card.module';
 import { CardOrdersModule } from './card-orders/card-orders.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { StripeModule } from '@golevelup/nestjs-stripe';
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [`.env`],
       validationSchema: configValidationSchema,
     }),
     TypeOrmModule.forRootAsync(typeOrmAsyncConfig),
@@ -31,7 +33,18 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     TransactionsModule,
     CardsModule,
     CardOrdersModule,
-    NotificationsModule
+    NotificationsModule,
+    StripeModule.forRoot(StripeModule, {
+      apiKey: process.env.STRIPE_SECRET,
+      webhookConfig: {
+        stripeSecrets: {
+          accountTest: process.env.STRIPE_WEBHOOK_SECRET,
+          connectTest: process.env.STRIPE_WEBHOOK_SECRET,
+        },
+        controllerPrefix: '/user/stripe/webhook',
+        requestBodyProperty: 'rawBody',
+      },
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],

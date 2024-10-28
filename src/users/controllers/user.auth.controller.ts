@@ -1,14 +1,4 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Get,
-  Post,
-  UnauthorizedException,
-  UseGuards,
-  UsePipes,
-  ValidationPipe,
-} from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Headers, Post, Query, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ApiSecurity, ApiTags } from '@nestjs/swagger';
@@ -19,24 +9,23 @@ import { JwtAuthGuard } from 'src/auth/strategy/jwt-auth.guard';
 import { GetUser } from '../decorators/get-user.decorator';
 import { OrdersService } from 'src/card-orders/services/card-orders.service';
 import { CreateOrderDto } from 'src/card-orders/dto/create-order.dto';
-import { UpdateOrderStatusDto } from 'src/card-orders/dto/update-order.dto';
 import { ApproveOrderDto } from 'src/card-orders/dto/approve-order.dto';
 import { NeogardenNftService } from 'src/third-parties/neogarden-nft/neogarden-nft.service';
 import { GetNftsByWalletDto } from '../dto/get-nfts-by-wallet.dto';
-
+import { StripeInformation } from '../dto/stripe-information.dto';
 @Controller('user')
 @UseGuards(JwtAuthGuard)
 @ApiTags('User Auth')
 @ApiSecurity('JWT-auth')
 export class UserAuthController {
-  constructor(
-    @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-    private userService: UsersService,
-    private authService: AuthService,
-    private ordersService: OrdersService,
-    private neogardenNftService: NeogardenNftService
-  ) {}
+	constructor(
+		@InjectRepository(User)
+		private readonly userRepository: Repository<User>,
+		private userService: UsersService,
+		private authService: AuthService,
+		private ordersService: OrdersService,
+    private neogardenNftService: NeogardenNftService,
+	) {}
 
   @Post('/update-user')
   async updateUser(@Body() user: Partial<User>): Promise<User | UnauthorizedException> {
@@ -76,9 +65,8 @@ export class UserAuthController {
   }
 
   @Post('/update-card-order')
-  async updateCardOrder(@Body() body: UpdateOrderStatusDto, @GetUser() user: User) {
-    const userId = user.id;
-    return await this.ordersService.updateOrderStatus(userId, body);
+  async updateCardOrder(@Body() body: any) {
+    return await this.ordersService.updateOrder(body);
   }
 
   @Post('/approve-apply-card')
@@ -103,17 +91,30 @@ export class UserAuthController {
       throw new BadRequestException(`Failed to fetch NFTs: ${error.message}`);
     }
   }
+  
+  @Get('/stripe/validate-stripe')
+  async validateStripeUserPais(@GetUser() user: User) {
+    return await this.userService.validateStripeAccount(user);
+  }
 
-  // @Post('/verify/opensea')
-  // async verifyOpenseaAccount(@GetUser() user: User, @Body() body: { address: string }): Promise<Wallet> {
-  // 	return await this.userService.verifyOpenseaAccount(user.id, body?.address);
-  // }
+  @Get('/get-order-details')
+  async getOrderDetails(@Query('id') id: string) {
+    return await this.ordersService.getOrderById(Number(id));
+  }
 
-  // @Post('/verify/etherscan')
-  // async verifyEtherscanAccount(
-  // 	@GetUser() user: User,
-  // 	@Body() body: { address: string; signature: any; message: string; id: string }
-  // ): Promise<Wallet> {
-  // 	return await this.userService.verifyEtherscanAccount(user.id, body);
-  // }
+  @Post('/stripe/create-subscription')
+  async processStripSubscription(@GetUser() user: User, @Body() stripeInformation: StripeInformation) {
+    const { paymentMethodId, priceId } = stripeInformation;
+    const processSubscriptionCreation = await this.userService.createSubscription(user, paymentMethodId, priceId);
+    return processSubscriptionCreation;
+  }
+
+  @Post('/stripe/process-payment')
+  async processStripPayment(@GetUser() user: User, @Body() stripeInformation: StripeInformation) {
+    const { paymentMethodId, priceId, orderId } = stripeInformation;
+    const processSubscriptionCreation = await this.userService.processPayment(user, paymentMethodId, priceId, orderId);
+    
+    return processSubscriptionCreation;
+  }
+
 }

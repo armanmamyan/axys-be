@@ -1,10 +1,9 @@
 import { Module } from '@nestjs/common';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
-import * as dotenv from 'dotenv';
 import * as path from 'path';
-
-dotenv.config({ path: './.env' });
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 @Module({
   imports: [

@@ -44,6 +44,15 @@ export class User {
   @Column({ nullable: true })
   onBoarding: boolean;
 
+  @Column({ nullable: true })
+  stripeCustomerId: string;
+
+  @Column({ nullable: true })
+  subscriptionId: string;
+
+  @Column({ nullable: true })
+  subscriptionStatus: string;
+
   @OneToMany(() => CardOrder, (cardOrder) => cardOrder.user, {
     cascade: true,
     nullable: true,

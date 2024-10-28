@@ -2,6 +2,7 @@ export enum OrderStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
+  FAILED = 'failed',
 }
 
 export enum CardCategory {

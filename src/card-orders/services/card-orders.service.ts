@@ -1,14 +1,13 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { LessThanOrEqual, Repository } from 'typeorm';
+import { LessThan, LessThanOrEqual, Repository } from 'typeorm';
 import { CardOrder } from '../entities/card-order.entity';
 import { CardsService } from 'src/card/services/card.service';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { OrderStatus, PaymentPlan } from 'src/card-orders/enums';
-import { UpdateOrderStatusDto } from 'src/card-orders/dto/update-order.dto';
 import { CreateOrderDto } from 'src/card-orders/dto/create-order.dto';
 import { User } from 'src/users/entities/user.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { log } from 'console';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class OrdersService {
@@ -72,12 +71,8 @@ export class OrdersService {
     };
   }
 
-  async updateOrderStatus(
-    orderId: number,
-    updateOrderStatusDto: UpdateOrderStatusDto
-  ): Promise<CardOrder> {
-    const { status } = updateOrderStatusDto;
-
+  async updateOrder(updateOrder: any): Promise<CardOrder> {
+    const { orderId, ...updatableInformation } = updateOrder;
     const cardOrder = await this.cardOrderRepository.findOne({
       where: {
         id: orderId,
@@ -88,15 +83,26 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    cardOrder.status = status;
-    await this.cardOrderRepository.save(cardOrder);
+    const result = await this.cardOrderRepository
+      .createQueryBuilder()
+      .update(CardOrder)
+      .set({ ...updatableInformation })
+      .where({
+        id: orderId,
+      })
+      .returning('*')
+      .execute();
 
-    if (status === OrderStatus.APPROVED && !cardOrder.card) {
-      // Create a card for the user
-      await this.cardsService.createCardForOrder(orderId);
-    }
+    let updatedUser: CardOrder;
 
-    return cardOrder;
+    if (result.raw[0])
+      updatedUser = await this.cardOrderRepository.findOne({
+        where: {
+          id: orderId,
+        },
+        relations: ['user', 'card'],
+      });
+    return updatedUser;
   }
 
   async approveOrder(orderId: number, paymentReceipt: any): Promise<CardOrder> {
@@ -166,5 +172,24 @@ export class OrdersService {
     return (
       dateTo.getMonth() - dateFrom.getMonth() + 12 * (dateTo.getFullYear() - dateFrom.getFullYear())
     );
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async updatePendingOrdersToFailed() {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    const pendingOrders = await this.cardOrderRepository.update(
+      {
+        status: OrderStatus.PENDING,
+        date: LessThan(twentyFourHoursAgo),
+      },
+      { status: OrderStatus.FAILED, consumedNfts: null },
+    );
+
+    if (pendingOrders.affected > 0) {
+      console.log(
+        `Updated ${pendingOrders.affected} pending orders to FAILED status.`,
+      );
+    }
   }
 }

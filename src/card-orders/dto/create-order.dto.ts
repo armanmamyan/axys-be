@@ -7,6 +7,7 @@ import {
   ValidateIf,
   Length,
   IsOptional,
+  IsInt,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { CardCategory, PaymentType, PaymentPlan } from '../enums';
@@ -33,7 +34,9 @@ class DeliveryAddressDto {
   @IsNotEmpty()
   zipCode: string;
 
-  // Additional fields as needed
+  @IsString()
+  @IsOptional()
+  optional: string;
 }
 
 class PaymentDetailsDto {
@@ -46,6 +49,27 @@ class PaymentDetailsDto {
   @IsString()
   @IsNotEmpty()
   walletAddress: string;
+}
+
+class PaymentReceiptDto {
+  @ValidateIf((o) => o.paymentType === PaymentType.CRYPTO)
+  @IsString()
+  @IsNotEmpty()
+  to: string;
+
+  @ValidateIf((o) => o.paymentType === PaymentType.CRYPTO)
+  @IsString()
+  @IsNotEmpty()
+  from: string;
+
+  @IsInt()
+  @IsNotEmpty()
+  price: number;
+
+  @ValidateIf((o) => o.paymentType === PaymentType.CREDIT_CARD)
+  @IsString()
+  @IsNotEmpty()
+  paymentPriceId: string;
 }
 
 export class CreateOrderDto {
@@ -72,6 +96,10 @@ export class CreateOrderDto {
   @ValidateNested()
   @Type(() => PaymentDetailsDto)
   paymentDetails: PaymentDetailsDto;
+
+  @ValidateNested()
+  @Type(() => PaymentReceiptDto)
+  paymentReceipt: PaymentReceiptDto;
 
   @IsOptional()
   consumedNfts: any;

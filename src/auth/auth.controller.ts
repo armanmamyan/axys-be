@@ -23,11 +23,7 @@ export class AuthController {
   @Post('/forget-password')
   async forgetPassword(@Body() body: any) {
     const { email } = body;
-    await this.authService.forgetPasswordOtp(email);
-    return {
-      message:
-        'If your email is registered, you will receive a password reset link.',
-    };
+    return await this.authService.forgetPasswordOtp(email);
   }
 
   @Post('/update-password')

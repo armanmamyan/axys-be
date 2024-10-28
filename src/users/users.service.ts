@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { StripeService } from '@/third-parties/stripe/stripe.service';
+import { OrdersService } from '@/card-orders/services/card-orders.service';
+import { OrderStatus } from '@/card-orders/enums';
 
 // This should be a real class/interface representing a user entity
 // export type User = any;
@@ -10,7 +13,9 @@ import { User } from './entities/user.entity';
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private readonly usersRepository: Repository<User>
+    private readonly usersRepository: Repository<User>,
+    private cardOrderService: OrdersService,
+    private stripeService: StripeService
   ) {}
 
   async create(createUser: Partial<User>): Promise<User> {
@@ -24,7 +29,15 @@ export class UsersService {
   async findUser(email: string): Promise<User> {
     return await this.usersRepository.findOne({
       where: { email },
-      select: ['avatar', 'email', 'id', 'kycStatus', 'name', 'surName', 'username', 'onBoarding', 'cardOrder', 'cards'],
+      select: ['avatar', 'email', 'id', 'kycStatus', 'name', 'surName', 'username', 'onBoarding', 'cardOrder', 'cards', 'stripeCustomerId'],
+      relations: ['cardOrder']
+    });
+  }
+
+  async findByStripeCustomerId(customer: string): Promise<Partial<User>> {
+    return await this.usersRepository.findOne({
+      where: { stripeCustomerId: customer },
+      select: ['avatar', 'email', 'id', 'kycStatus', 'name', 'surName', 'username', 'onBoarding', 'cardOrder', 'cards', 'stripeCustomerId'],
       relations: ['cardOrder']
     });
   }
@@ -41,7 +54,63 @@ export class UsersService {
     return await this.usersRepository.update({ email: userEmail }, data);
   }
 
-  async remove(id: string): Promise<void> {
-    await this.usersRepository.delete(id);
+  async validateStripeAccount(user:User) {
+    const customerId = user.stripeCustomerId;
+    
+    if (!customerId) {
+      const customer = await this.stripeService.createStripeCustomer(user.email);
+      await this.usersRepository.update({ id: user.id }, { stripeCustomerId: customer.id });
+      const createIntent = await this.stripeService.createSetupIntent(customer.id)
+      return {
+        validationId: createIntent.client_secret
+      };
+    }
+    // Expiration Process:
+    // If a user initiates a SetupIntent or PaymentIntent but doesn't complete it (e.g., closes the browser), 
+    // the intent stays in a pending state like requires_confirmation or requires_action.
+    // After 24 hours of inactivity, Stripe automatically expires the intent by setting its status to canceled.
+    // Implications:
+
+    // If the user returns within 24 hours, you can attempt to reuse the existing intent by retrieving it from
+    //  Stripe and checking its status.
+    // However, reusing intents can be complex due to potential state changes or partial completions.
+    const createIntent = await this.stripeService.createSetupIntent(customerId)
+    
+    return {
+      validationId: createIntent.client_secret,
+    };
+  }
+
+  async createSubscription(user: User, paymentMethodId: string, priceId: string): Promise<any> {
+    const customerId = user.stripeCustomerId;
+
+    // Attach the payment method
+    await this.stripeService.attachPaymentMethod(customerId, paymentMethodId);
+
+    // Create the subscription
+    const subscription = await this.stripeService.createSubscription(customerId, priceId);
+
+    await this.usersRepository.update({ id: user.id }, { subscriptionId: subscription.id });
+
+    return subscription;
+  }
+
+  async processPayment(user: User, paymentMethodId: string, priceId: string, orderId: string): Promise<any> {
+    const customerId = user.stripeCustomerId;
+    const order = await this.cardOrderService.getOrderById(Number(orderId));
+
+    if(order.status === OrderStatus.PENDING) {
+      // Attach the payment method
+      await this.stripeService.attachPaymentMethod(customerId, paymentMethodId);
+  
+      // Create the payment manually
+      const manualPayment = await this.stripeService.processPayment(customerId, priceId, orderId);
+  
+      await this.usersRepository.update({ id: user.id }, { subscriptionId: manualPayment.id });
+  
+      return manualPayment;
+    }
+
+    return order
   }
 }

@@ -12,9 +12,7 @@ import { LoggerModule } from 'src/logger/logger.module';
 import { MailModule } from '../mail/mail.module';
 import { Otp } from './entities/otp.entity';
 import { PasswordReset } from './entities/passwordReset.entity';
-import * as dotenv from 'dotenv';
 
-dotenv.config({ path: './.env' });
 @Module({
   imports: [
     LoggerModule,

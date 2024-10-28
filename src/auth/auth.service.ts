@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compareSync, hashSync } from 'bcryptjs';
 import { validate } from 'class-validator';
@@ -11,9 +11,7 @@ import { Otp } from './entities/otp.entity';
 import { LessThan, Repository } from 'typeorm';
 import { PasswordReset } from './entities/passwordReset.entity';
 import { randomBytes } from 'crypto';
-import * as dotenv from 'dotenv';
-
-dotenv.config({ path: './.env' });
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -25,10 +23,11 @@ export class AuthService {
     
     private jwtService: JwtService,
     private userservice: UsersService,
-    private mailerService: MailerService
+    private mailerService: MailerService,
+    private configService: ConfigService
   ) {
   }
-
+  
   async generateToken(email: string): Promise<string> {
     const jwtPayload = { email };
 
@@ -84,6 +83,7 @@ export class AuthService {
       return { sent: true };
     } catch (error) {
       console.error('Error During OTP Creation', { error });
+      throw error;
     }
   }
 
@@ -91,7 +91,7 @@ export class AuthService {
     try {
       const existingUser = await this.userservice.findUser(email);
       if (!existingUser) {
-       return;
+       throw new NotFoundException('User Not Found');
       }
 
       const token = randomBytes(32).toString('hex');
@@ -112,12 +112,17 @@ export class AuthService {
         template: 'reset-password',
         context: {
           customerEmail: email,
-          resetLink: `${process.env.CLIENT_URL}/reset-password?token=${token}`
+          resetLink: `${this.configService.get<string>('CLIENT_URL')}/reset-password?token=${token}`
         },
       });
-
+      
+      return {
+        message:
+          'If your email is registered, you will receive a password reset link.',
+      };
     } catch (error) {
       console.error('Error During Password Reset Creation', { error });
+      throw error;
     }
   }
 
@@ -160,7 +165,7 @@ export class AuthService {
 
       return { verified: true };
     } catch (error) {
-      return { verified: false };
+      throw error;
     }
   }
 

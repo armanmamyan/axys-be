@@ -9,15 +9,17 @@ import { PaymentReminderListener } from './listeners/payment-reminder.listener';
 import { UsersModule } from 'src/users/users.module';
 import { OrderListener } from './listeners/order.listener';
 import { PaymentReminderScheduler } from './schedulers/payment-reminder.scheduler';
+import { StripeListener } from './listeners/stripe-invoice.listener';
+import { CardOrder } from '@/card-orders/entities/card-order.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Notification, User]),
+    TypeOrmModule.forFeature([Notification, User, CardOrder]),
     ScheduleModule.forRoot(),
     forwardRef(() => CardOrdersModule),
     forwardRef(() => UsersModule),
   ],
-  providers: [NotificationsService, PaymentReminderListener, OrderListener, PaymentReminderScheduler],
+  providers: [NotificationsService, PaymentReminderListener, OrderListener, PaymentReminderScheduler, StripeListener],
   exports: [NotificationsService],
 })
 export class NotificationsModule {}

@@ -148,3 +148,13 @@ pnmp run migration:generate
 pnpm run migration:run
 ```
 5. Push migration file to git
+
+
+## Run ngrok to test 3rd party webhooks or https connections
+1. Install ngrok
+https://ngrok.com/download
+
+2. Run the following command
+```bash
+pnmp run ngrok
+```
