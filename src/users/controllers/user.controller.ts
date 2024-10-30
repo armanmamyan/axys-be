@@ -122,6 +122,7 @@ export class UserController {
         await this.handleSubscriptionResumed(event);
         break;
       case 'invoice.payment_failed':
+      case 'setup_intent.setup_failed':
         await this.handlePaymentFailed(event);
         break;
       case 'invoice.payment_succeeded':
