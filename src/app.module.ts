@@ -16,6 +16,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { StripeModule } from '@golevelup/nestjs-stripe';
 import * as dotenv from 'dotenv';
+import { KYCModule } from './kyc/kyc.module';
 dotenv.config();
 
 @Module({
@@ -34,6 +35,7 @@ dotenv.config();
     CardsModule,
     CardOrdersModule,
     NotificationsModule,
+    KYCModule,
     StripeModule.forRoot(StripeModule, {
       apiKey: process.env.STRIPE_SECRET,
       webhookConfig: {

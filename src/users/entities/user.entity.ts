@@ -3,8 +3,9 @@ import { Card } from 'src/card/entities/card.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import { CardOrder } from 'src/card-orders/entities/card-order.entity';
 import { Transaction } from 'src/transactions/entity/transactions.entity';
-import { Column, Entity, JoinColumn, OneToMany, PrimaryGeneratedColumn, Unique } from 'typeorm';
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn, Unique } from 'typeorm';
 import { PasswordReset } from '@/auth/entities/passwordReset.entity';
+import { KYC } from '@/kyc/entities/kyc.entity';
 
 @Entity()
 export class User {
@@ -62,6 +63,15 @@ export class User {
 
   @OneToMany(() => Card, (card) => card.user)
   cards: Card[];
+
+  @OneToOne(() => KYC, (kyc) => kyc.user, {
+    cascade: true,
+    nullable: true,
+  })
+  kycInformation: KYC
+
+  @Column({ type: 'jsonb',  nullable: true })
+  primaryAddress: any;
 
   @OneToMany(() => Transaction, (transaction) => transaction.sender)
   sentTransactions: Transaction[]
