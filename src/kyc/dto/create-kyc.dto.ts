@@ -1,4 +1,4 @@
-import { IsBoolean, IsOptional, IsJSON, IsDateString, IsString } from 'class-validator';
+import { IsBoolean, IsOptional, IsJSON, IsDateString } from 'class-validator';
 
 export class CreateKycDto {
   @IsBoolean()

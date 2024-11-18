@@ -8,6 +8,7 @@ import { CreateOrderDto } from 'src/card-orders/dto/create-order.dto';
 import { User } from 'src/users/entities/user.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { AddressDto } from '@/kyc/dto/create-profile.dto';
 
 @Injectable()
 export class OrdersService {
@@ -105,6 +106,30 @@ export class OrdersService {
     return updatedUser;
   }
 
+  async updateDeliveryAddress(userId: number, newAddress: AddressDto): Promise<void> {
+    const orders = await this.cardOrderRepository.find({
+      where: { user: { id: userId } },
+    });
+
+    if (orders.length > 0) {
+      await Promise.all(
+        orders.map((order) =>
+          this.updateOrder({
+            orderId: order.id,
+            deliveryAddress: {
+              street: newAddress.street,
+              city: newAddress.city,
+              state: newAddress.state,
+              country: newAddress.country,
+              zipCode: newAddress.zipCode,
+              optional: newAddress.optional,
+            },
+          })
+        )
+      );
+    }
+  }
+
   async approveOrder(orderId: number, paymentReceipt: any): Promise<CardOrder> {
     const order = await this.cardOrderRepository.findOne({
       where: { id: orderId },
@@ -183,13 +208,11 @@ export class OrdersService {
         status: OrderStatus.PENDING,
         date: LessThan(twentyFourHoursAgo),
       },
-      { status: OrderStatus.FAILED, consumedNfts: null },
+      { status: OrderStatus.FAILED, consumedNfts: null }
     );
 
     if (pendingOrders.affected > 0) {
-      console.log(
-        `Updated ${pendingOrders.affected} pending orders to FAILED status.`,
-      );
+      console.log(`Updated ${pendingOrders.affected} pending orders to FAILED status.`);
     }
   }
 }

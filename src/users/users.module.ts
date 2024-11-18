@@ -9,6 +9,7 @@ import { ThirdPartiesModule } from 'src/third-parties/third-parties.module';
 import { CardOrdersModule } from 'src/card-orders/card-orders.module';
 import { CardsModule } from 'src/card/card.module';
 import { TransactionsModule } from 'src/transactions/transaction.module';
+import { KYCModule } from '@/kyc/kyc.module';
 
 @Module({
   imports: [
@@ -17,8 +18,8 @@ import { TransactionsModule } from 'src/transactions/transaction.module';
     forwardRef(() => ThirdPartiesModule),
     forwardRef(() => CardOrdersModule),
     forwardRef(() => CardsModule),
-    forwardRef(() => TransactionsModule)
-    
+    forwardRef(() => TransactionsModule),
+    forwardRef(() => KYCModule),
   ],
   providers: [UsersService],
   controllers: [UserController, UserAuthController],
