@@ -6,6 +6,9 @@ export class KYC {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Column({ nullable: true })
+  applicantId: string;
+
   @Column()
   firstName: string;
 

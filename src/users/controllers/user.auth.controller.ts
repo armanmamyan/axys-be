@@ -171,6 +171,19 @@ export class UserAuthController {
     return this.kycService.create(kycData);
   }
 
+  @Patch('/kyc/applicantId/:id')
+  async updateApplicantId(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() applicantId: { applicantId: string }
+  ): Promise<KYC> {
+    const existingKyc = await this.kycService.findOne(id);
+    if (!existingKyc) {
+      throw new NotFoundException(`KYC record with ID ${id} not found`);
+    }
+
+    return this.kycService.update(id, applicantId);
+  }
+
   @Patch('/kyc/profile/:id')
   async updateProfile(
     @Param('id', ParseIntPipe) id: number,
