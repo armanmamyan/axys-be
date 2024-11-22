@@ -9,6 +9,9 @@ export class KYC {
   @Column({ nullable: true })
   applicantId: string;
 
+  @Column({ default: 'basic-poa-kyc-level' })
+  currentLevel: string;
+
   @Column()
   firstName: string;
 
