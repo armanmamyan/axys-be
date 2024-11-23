@@ -27,7 +27,8 @@ import * as crypto from 'crypto';
 import { KycStatus } from '@/kyc/enums';
 import { KYC } from '@/kyc/entities/kyc.entity';
 import { KycService } from '@/kyc/services/kyc.service';
-
+import { VaultAsset } from '@fireblocks/ts-sdk';
+import { FireblocksService } from '@/third-parties/fireblocks/fireblocks.service';
 interface SumsubWebhookPayload {
   applicantId: string;
   inspectionId: string;
@@ -56,6 +57,7 @@ export class UserController {
     private mailerService: MailerService,
     private stripeService: StripeService,
     private kycService: KycService,
+    private fireblocksService: FireblocksService,
     private readonly eventEmitter: EventEmitter2
   ) {}
 
@@ -81,7 +83,7 @@ export class UserController {
           token: theJWTToken,
         };
         const storeUser = await this.userService.create(createUser);
-        const { id, kycStatus, name, avatar, username, surName } = storeUser;
+        const { id, kycStatus, name, avatar, username, surName, shortId } = storeUser.user;
 
         // Send Welcome via email
         await this.mailerService.sendMail({
@@ -94,6 +96,7 @@ export class UserController {
           email,
           token: theJWTToken,
           kycStatus,
+          shortId,
           name,
           avatar,
           username,
@@ -181,6 +184,17 @@ export class UserController {
       return { received: true };
     } catch (error) {
       throw new BadRequestException(`Error processing Sumsub webhook: ${error.message}`);
+    }
+  }
+
+  @Post('/fireblocks/notify')
+  async FIREBLOCKS_WEBHOOK_SETUP(@Req() req) {
+    try {
+      if(req.body.data?.status === 'COMPLETED') {
+        await this.fireblocksService.triggerEmailNotification(req.body);
+      }
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -274,6 +288,9 @@ export class UserController {
       }
     }
 
+    if(isApproved) {
+      await this.userService.createFireblocksAccountForUser(Number(externalUserId));
+    }
     await this.userService.updateKycStatus(externalUserId, kycStatus);
   }
 

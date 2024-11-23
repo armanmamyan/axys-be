@@ -49,7 +49,7 @@ export class UserAuthController {
   ) {}
 
   @Post('/update-user')
-  async updateUser(@Body() user: Partial<User>): Promise<User | UnauthorizedException> {
+  async updateUser(@Body() user: Partial<User>): Promise<Partial<User> | UnauthorizedException> {
     // Check if there is a user.
     if (!user) {
       throw new BadRequestException(`You must define a user.`);

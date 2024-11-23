@@ -14,4 +14,6 @@ export const configValidationSchema = joi.object({
 	CLIENT_URL: joi.string().required(),
 	STRIPE_SECRET: joi.string().required(),
 	STRIPE_WEBHOOK_SECRET: joi.string().required(),
+	CMC_API_KEY: joi.string().required(),
+	VISA_API_KEY: joi.string(),
 });

@@ -12,6 +12,7 @@ import { LoggerModule } from 'src/logger/logger.module';
 import { MailModule } from '../mail/mail.module';
 import { Otp } from './entities/otp.entity';
 import { PasswordReset } from './entities/passwordReset.entity';
+import { ThirdPartiesModule } from '@/third-parties/third-parties.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { PasswordReset } from './entities/passwordReset.entity';
       inject: [ConfigService],
     }),
     forwardRef(() => UsersModule),
+    forwardRef(() => ThirdPartiesModule),
     MailModule,
     TypeOrmModule.forFeature([User, Otp, PasswordReset]),
   ],

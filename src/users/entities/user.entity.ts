@@ -3,17 +3,10 @@ import { Card } from 'src/card/entities/card.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import { CardOrder } from 'src/card-orders/entities/card-order.entity';
 import { Transaction } from 'src/transactions/entity/transactions.entity';
-import {
-  Column,
-  Entity,
-  JoinColumn,
-  OneToMany,
-  OneToOne,
-  PrimaryGeneratedColumn,
-  Unique,
-} from 'typeorm';
+import { BeforeInsert, Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { PasswordReset } from '@/auth/entities/passwordReset.entity';
 import { KYC } from '@/kyc/entities/kyc.entity';
+import { randomBytes } from 'crypto';
 
 @Entity()
 export class User {
@@ -47,11 +40,17 @@ export class User {
   @Column({ nullable: true })
   referral: string;
 
+  @Column({ unique: true, nullable: true })
+  shortId: string;
+
   @Column({ nullable: true })
   token: string;
 
   @Column({ nullable: true })
   onBoarding: boolean;
+
+  @Column({ nullable: true })
+  fireblocksVaultId: string;
 
   @Column({ nullable: true })
   stripeCustomerId: string;
@@ -89,6 +88,11 @@ export class User {
 
   @OneToMany(() => PasswordReset, (passwordReset) => passwordReset.user)
   passwordResets: PasswordReset[];
+
+  @BeforeInsert()
+  generateShortId() {
+    this.shortId = randomBytes(4).toString('hex');
+  }
 
   constructor(user?: Partial<User>) {
     Object.assign(this, user);

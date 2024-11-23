@@ -11,6 +11,7 @@ import { OrderListener } from './listeners/order.listener';
 import { PaymentReminderScheduler } from './schedulers/payment-reminder.scheduler';
 import { StripeListener } from './listeners/stripe-invoice.listener';
 import { CardOrder } from '@/card-orders/entities/card-order.entity';
+import { FireblocksListener } from './listeners/fireblocks-invoice';
 
 @Module({
   imports: [
@@ -19,7 +20,7 @@ import { CardOrder } from '@/card-orders/entities/card-order.entity';
     forwardRef(() => CardOrdersModule),
     forwardRef(() => UsersModule),
   ],
-  providers: [NotificationsService, PaymentReminderListener, OrderListener, PaymentReminderScheduler, StripeListener],
+  providers: [NotificationsService, PaymentReminderListener, OrderListener, PaymentReminderScheduler, StripeListener, FireblocksListener],
   exports: [NotificationsService],
 })
 export class NotificationsModule {}

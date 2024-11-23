@@ -12,6 +12,7 @@ import { LessThan, Repository } from 'typeorm';
 import { PasswordReset } from './entities/passwordReset.entity';
 import { randomBytes } from 'crypto';
 import { ConfigService } from '@nestjs/config';
+import { FireblocksService } from '@/third-parties/fireblocks/fireblocks.service';
 
 @Injectable()
 export class AuthService {
@@ -24,7 +25,8 @@ export class AuthService {
     private jwtService: JwtService,
     private userservice: UsersService,
     private mailerService: MailerService,
-    private configService: ConfigService
+    private configService: ConfigService,
+    private fireblocksService: FireblocksService
   ) {
   }
   
@@ -169,7 +171,7 @@ export class AuthService {
     }
   }
 
-  async login(signinDto: SigninDto): Promise<Partial<User>> {
+  async login(signinDto: SigninDto): Promise<any> {
     const { email, password } = signinDto;
     // Validation Flag
     let isOk = false;
@@ -198,6 +200,11 @@ export class AuthService {
         // Generate JWT token
         const accessToken = await this.jwtService.sign({ email });
         const { password, ...userInformation } = userDetails;
+        if(userInformation.fireblocksVaultId) {
+          const getAssetList = await this.fireblocksService.getVaultAccountDetails(userInformation.fireblocksVaultId)
+          return { ...userInformation, token: accessToken, assets: getAssetList.data.assets };
+        }
+        
         return { ...userInformation, token: accessToken };
       } else {
         // Password or email does not match

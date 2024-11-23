@@ -1,6 +1,79 @@
-import { Controller } from '@nestjs/common';
+import { JwtAuthGuard } from '@/auth/strategy/jwt-auth.guard';
+import { GetUser } from '@/users/decorators/get-user.decorator';
+import { User } from '@/users/entities/user.entity';
+import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiSecurity } from '@nestjs/swagger';
+import { FireblocksService } from './fireblocks/fireblocks.service';
+import { CMCService } from './cmc/cmc.service';
+import { CMCTokenIDs } from '@/utils/fireblocks.assets.supported';
+import { WithdrawalDetailsDto } from './fireblocks/dto/withdrawalDetails.dto';
 
 @Controller('third-parties')
+@UseGuards(JwtAuthGuard)
+@ApiSecurity('JWT-auth')
 export class ThirdPartiesController {
-  constructor() {}
+  constructor(
+    private fireblocksService: FireblocksService,
+    private cmcService: CMCService
+  ) {}
+
+  @Get('/query-deposit-address')
+  async getUserData(@GetUser() user: User, @Query('chainId') chainId: string) {
+    return await this.fireblocksService.getAccountBasedDepositAddress(
+      user.fireblocksVaultId,
+      chainId
+    );
+  }
+
+  @Get('/get-updated-balances')
+  async getUpdatedBalances(@GetUser() user: User) {
+    return await this.fireblocksService.updateVaultAccountAssetBalance(user.fireblocksVaultId);
+  }
+
+  @Get('/get-token-prices')
+  async getSupportedTokensPrices(): Promise<any> {
+    try {
+      const processFetching = await Promise.all(
+        CMCTokenIDs.map(async (id) => {
+          const latestQuote = await this.cmcService.getTokenLatestQuotes(id.toString());
+          return latestQuote;
+        })
+      );
+
+      return processFetching;
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
+  }
+
+  @Post('/withdraw-funds')
+  async processWithdrawal(
+    @GetUser() user: User,
+    @Body() withdrawalDetails: WithdrawalDetailsDto
+  ): Promise<any> {
+    try {
+      return await this.fireblocksService.processVaultAccountWithdraw(
+        user.fireblocksVaultId,
+        withdrawalDetails
+      );
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  @Get('/transaction-history')
+  async getTransactionHistory(
+    @GetUser() user: User,
+    @Query('limit') limit: number,
+    @Query('before') before: number,
+    @Query('after') after: number
+  ): Promise<any> {
+    try {
+      return await this.fireblocksService.getCustomerTransactions(user.fireblocksVaultId, limit, before, after);
+    } catch (error) {
+      throw error;
+    }
+  }
 }

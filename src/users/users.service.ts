@@ -7,6 +7,7 @@ import { OrdersService } from '@/card-orders/services/card-orders.service';
 import { OrderStatus } from '@/card-orders/enums';
 import { KycStatus } from '@/kyc/enums';
 
+import { FireblocksService } from '@/third-parties/fireblocks/fireblocks.service';
 // This should be a real class/interface representing a user entity
 // export type User = any;
 
@@ -16,19 +17,51 @@ export class UsersService {
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
     private cardOrderService: OrdersService,
-    private stripeService: StripeService
+    private stripeService: StripeService,
+    private fireblocksService: FireblocksService
   ) {}
 
-  async create(createUser: Partial<User>): Promise<User> {
-    return await this.usersRepository.save(new User(createUser));
+  async create(createUser: Partial<User>) {
+    const processUserCreation = await this.usersRepository.save(new User(createUser));
+    
+    return {
+      user: processUserCreation
+    };
   }
 
+  async createFireblocksAccountForUser(id: number) {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+      relations: ['user'],
+    });
+    const { fireblocksId } = await this.fireblocksService.createFireblocksAccountWithAssets(
+      id,
+      user.email
+    );
+
+    await this.usersRepository
+      .createQueryBuilder()
+      .update(User)
+      .set({ fireblocksVaultId: fireblocksId })
+      .where({
+        id,
+      })
+      .returning('*')
+      .execute();
+  }
+  
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
   }
 
-  async findUser(email: string): Promise<User> {
+  async findUserByFireblocksId(id: string) {
     return await this.usersRepository.findOne({
+      where: { fireblocksVaultId: id }
+    })
+  }
+
+  async findUser(email: string) {
+    const userData = await this.usersRepository.findOne({
       where: { email },
       select: [
         'avatar',
@@ -42,9 +75,18 @@ export class UsersService {
         'cardOrder',
         'cards',
         'stripeCustomerId',
+        'fireblocksVaultId',
+        'shortId'
       ],
       relations: ['cardOrder', 'kyc'],
     });
+    const getAssetList = await this.fireblocksService.getVaultAccountDetails(
+      userData?.fireblocksVaultId
+    );
+    return {
+      ...userData,
+      assets: getAssetList.data.assets
+    };
   }
 
   async findByStripeCustomerId(customer: string): Promise<Partial<User>> {
