@@ -1,4 +1,11 @@
-import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { compareSync, hashSync } from 'bcryptjs';
 import { validate } from 'class-validator';
@@ -21,15 +28,14 @@ export class AuthService {
     @InjectRepository(Otp) private otpRepository: Repository<Otp>,
     @InjectRepository(PasswordReset) private passwordResetRepository: Repository<PasswordReset>,
     @InjectRepository(User) private userRepository: Repository<User>,
-    
+
     private jwtService: JwtService,
     private userservice: UsersService,
     private mailerService: MailerService,
     private configService: ConfigService,
     private fireblocksService: FireblocksService
-  ) {
-  }
-  
+  ) {}
+
   async generateToken(email: string): Promise<string> {
     const jwtPayload = { email };
 
@@ -93,7 +99,7 @@ export class AuthService {
     try {
       const existingUser = await this.userservice.findUser(email);
       if (!existingUser) {
-       throw new NotFoundException('User Not Found');
+        throw new NotFoundException('User Not Found');
       }
 
       const token = randomBytes(32).toString('hex');
@@ -104,7 +110,7 @@ export class AuthService {
         token,
         expiresAt,
       });
-  
+
       await this.passwordResetRepository.save(passwordReset);
 
       // Send OTP via email
@@ -114,13 +120,12 @@ export class AuthService {
         template: 'reset-password',
         context: {
           customerEmail: email,
-          resetLink: `${this.configService.get<string>('CLIENT_URL')}/reset-password?token=${token}`
+          resetLink: `${this.configService.get<string>('CLIENT_URL')}/reset-password?token=${token}`,
         },
       });
-      
+
       return {
-        message:
-          'If your email is registered, you will receive a password reset link.',
+        message: 'If your email is registered, you will receive a password reset link.',
       };
     } catch (error) {
       console.error('Error During Password Reset Creation', { error });
@@ -200,11 +205,13 @@ export class AuthService {
         // Generate JWT token
         const accessToken = await this.jwtService.sign({ email });
         const { password, ...userInformation } = userDetails;
-        if(userInformation.fireblocksVaultId) {
-          const getAssetList = await this.fireblocksService.getVaultAccountDetails(userInformation.fireblocksVaultId)
+        if (userInformation.fireblocksVaultId) {
+          const getAssetList = await this.fireblocksService.getVaultAccountDetails(
+            userInformation.fireblocksVaultId
+          );
           return { ...userInformation, token: accessToken, assets: getAssetList.data.assets };
         }
-        
+
         return { ...userInformation, token: accessToken };
       } else {
         // Password or email does not match

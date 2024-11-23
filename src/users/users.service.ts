@@ -23,9 +23,9 @@ export class UsersService {
 
   async create(createUser: Partial<User>) {
     const processUserCreation = await this.usersRepository.save(new User(createUser));
-    
+
     return {
-      user: processUserCreation
+      user: processUserCreation,
     };
   }
 
@@ -49,15 +49,15 @@ export class UsersService {
       .returning('*')
       .execute();
   }
-  
+
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
   }
 
   async findUserByFireblocksId(id: string) {
     return await this.usersRepository.findOne({
-      where: { fireblocksVaultId: id }
-    })
+      where: { fireblocksVaultId: id },
+    });
   }
 
   async findUser(email: string) {
@@ -76,16 +76,18 @@ export class UsersService {
         'cards',
         'stripeCustomerId',
         'fireblocksVaultId',
-        'shortId'
+        'shortId',
       ],
       relations: ['cardOrder', 'kyc'],
     });
+    if (!userData) return null;
     const getAssetList = await this.fireblocksService.getVaultAccountDetails(
       userData?.fireblocksVaultId
     );
+
     return {
       ...userData,
-      assets: getAssetList.data.assets
+      assets: getAssetList?.data?.assets,
     };
   }
 
