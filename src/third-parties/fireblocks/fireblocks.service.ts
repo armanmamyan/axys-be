@@ -28,12 +28,12 @@ export class FireblocksService {
   ) {
     this.fireblocksInstanceSigner = new Fireblocks({
       apiKey: this.configService.get<string>('FIREBLOCKS_SIGNER_API'),
-      basePath: BasePath.US,
+      basePath: process.env.STAGE === 'prod' ? BasePath.US : BasePath.Sandbox,
       secretKey: readFileSync(this.configService.get<string>('FIREBLOCKS_API_SECRET_PATH'), 'utf8'),
     });
     this.fireblocksInstanceViewer = new Fireblocks({
       apiKey: this.configService.get<string>('FIREBLOCKS_VIEWER_API'),
-      basePath: BasePath.US,
+      basePath: process.env.STAGE === 'prod' ? BasePath.US : BasePath.Sandbox,
       secretKey: readFileSync(
         this.configService.get<string>('FIREBLOCKS_API_VIEWER_SECRET_PATH'),
         'utf8'
@@ -333,11 +333,11 @@ export class FireblocksService {
     try {
       const destination = body?.data?.destination;
       const source = body?.data?.source;
-      
+
       // Source is External, then it is a Deposit Transaction
       if (source.name === 'External') {
         const findUserByVaultId = await this.userService.findUserByFireblocksId(destination?.id);
-        
+
         if (findUserByVaultId.id) {
           this.eventEmitter.emit('fireblocks.depositted', body, findUserByVaultId.email);
         }
@@ -348,7 +348,6 @@ export class FireblocksService {
           this.eventEmitter.emit('fireblocks.withdrawed', body, findUserByVaultId.email);
         }
       }
-
     } catch (error) {
       console.error('Error During Fireblocks Notification');
       throw error;
