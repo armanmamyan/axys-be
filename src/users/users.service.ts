@@ -32,8 +32,8 @@ export class UsersService {
   async createFireblocksAccountForUser(id: number) {
     const user = await this.usersRepository.findOne({
       where: { id },
-      relations: ['user'],
     });
+
     const { fireblocksId } = await this.fireblocksService.createFireblocksAccountWithAssets(
       id,
       user.email
