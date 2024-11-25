@@ -39,7 +39,6 @@ export class FireblocksService {
         'utf8'
       ),
     });
-    console.log(this.createFireblocksAccountWithAssets(1, 'hoge@example.com'));
     this.fireblocksAssetList = SUPPORTED_ASSETS_LIST_TESTNET;
   }
 
@@ -51,7 +50,6 @@ export class FireblocksService {
       const processVaultAccount = await this.createVault(userId, userEmail);
       await this.createUserAssets(processVaultAccount.data.id);
       const getAssetList = await this.getVaultAccountDetails(processVaultAccount.data.id);
-      console.log('run createFireblocksAccountWithAssets', processVaultAccount, getAssetList);
       return {
         fireblocksId: processVaultAccount.data.id,
         assets: getAssetList.data.assets,
