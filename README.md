@@ -257,3 +257,42 @@ The KYC module includes robust error management for:
 - Invalid operations such as requesting additional KYC without basic KYC approval.
 
 This module is essential for maintaining compliance with KYC regulations and provides an extensible framework for customer verification.
+
+
+## How to upload/update keys to server environments
+
+- Compress the folder into a .tar.gz archive:
+```bash
+tar -czvf key.tar.gz key
+```
+
+- Upload the folder to temporary server 
+```bash
+curl -F "file=@key.tar.gz" https://file.io
+```
+
+- Copy the link from response object
+- Go to Heroku Environments
+
+```bash
+heroku run bash --app axys-app-be-stg
+```
+- Download the file 
+```bash
+curl -O https://file.io/UNIQUE_ID
+```
+
+- Rename the file for clarity
+```bash
+mv UNIQUE_ID key.tar.gz
+```
+
+- Extract the File
+```bash
+tar -xzvf key.tar.gz -C
+```
+
+- Remove compressed file
+```bash
+rm key.tar.gz
+```
