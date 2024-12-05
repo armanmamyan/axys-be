@@ -16,4 +16,9 @@ export const configValidationSchema = joi.object({
 	STRIPE_WEBHOOK_SECRET: joi.string().required(),
 	CMC_API_KEY: joi.string().required(),
 	VISA_API_KEY: joi.string(),
+	KEY_FILENAME: joi.string(),
+	BUCKETEER_BUCKET_NAME: joi.string(),
+	BUCKETEER_AWS_ACCESS_KEY_ID: joi.string(),
+	BUCKETEER_AWS_SECRET_ACCESS_KEY: joi.string(),
+	BUCKETEER_AWS_REGION: joi.string(),
 });

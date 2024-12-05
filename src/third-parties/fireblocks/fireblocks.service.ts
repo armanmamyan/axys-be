@@ -14,6 +14,7 @@ import { SUPPORTED_ASSETS_LIST_TESTNET } from '@/utils/fireblocks.assets.support
 import { IwithdrawalDetails } from './types';
 import { UsersService } from '@/users/users.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { downloadAndExtractFolder } from '@/utils/retrieve-s3-assets';
 
 @Injectable()
 export class FireblocksService {
@@ -26,20 +27,26 @@ export class FireblocksService {
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService
   ) {
-    this.fireblocksInstanceSigner = new Fireblocks({
-      apiKey: this.configService.get<string>('FIREBLOCKS_SIGNER_API'),
-      basePath: BasePath.US,
-      secretKey: readFileSync(this.configService.get<string>('FIREBLOCKS_API_SECRET_PATH'), 'utf8'),
-    });
-    this.fireblocksInstanceViewer = new Fireblocks({
-      apiKey: this.configService.get<string>('FIREBLOCKS_VIEWER_API'),
-      basePath: BasePath.US,
-      secretKey: readFileSync(
-        this.configService.get<string>('FIREBLOCKS_API_VIEWER_SECRET_PATH'),
-        'utf8'
-      ),
-    });
+    this.processInstanceReading();
     this.fireblocksAssetList = SUPPORTED_ASSETS_LIST_TESTNET;
+  }
+
+  async processInstanceReading() {
+    try {
+      const files = await downloadAndExtractFolder();
+      this.fireblocksInstanceSigner = new Fireblocks({
+        apiKey: this.configService.get<string>('FIREBLOCKS_SIGNER_API'),
+        basePath: BasePath.US,
+        secretKey: files.signer,
+      });
+      this.fireblocksInstanceViewer = new Fireblocks({
+        apiKey: this.configService.get<string>('FIREBLOCKS_VIEWER_API'),
+        basePath: BasePath.US,
+        secretKey: files.viewer,
+      });
+    } catch (error) {
+      console.error('Error initializing Fireblocks instance:', error);
+    }
   }
 
   async createFireblocksAccountWithAssets(
