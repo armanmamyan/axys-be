@@ -21,14 +21,18 @@ export class FireblocksService {
   private fireblocksInstanceSigner;
   private fireblocksInstanceViewer;
   private fireblocksAssetList;
+
   constructor(
     private configService: ConfigService,
     private readonly eventEmitter: EventEmitter2,
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService
   ) {
-    this.processInstanceReading();
     this.fireblocksAssetList = SUPPORTED_ASSETS_LIST_TESTNET;
+  }
+
+  async onModuleInit() {
+    await this.processInstanceReading();
   }
 
   async processInstanceReading() {

@@ -127,7 +127,6 @@ export class UserController {
     } catch (err) {
       throw new BadRequestException(`⚠️  Error verifying webhook signature: ${err.message}`);
     }
-    console.log(event.type);
 
     // Handle the event
     switch (event.type) {
