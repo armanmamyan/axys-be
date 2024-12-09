@@ -55,18 +55,10 @@ export class KycService {
     return kyc;
   }
 
-  async findUsersNeedingAdditionalKyc(): Promise<KYC[]> {
-    return this.kycRepository
-      .createQueryBuilder('kyc')
-      .leftJoinAndSelect('kyc.user', 'user')
-      .where('kyc.basicPoaKycLevel = :approved', { approved: true })
-      .andWhere(
-        new Brackets((qb) => {
-          qb.where('kyc.additionalPoaKycLevel = :false', { false: false }).orWhere(
-            'kyc.additionalPoaKycLevel IS NULL'
-          );
-        })
-      )
-      .getMany();
+  async findByApplicantId(applicantId: string): Promise<KYC> {
+    const kyc = await this.kycRepository.findOne({
+      where: { applicantId },
+    });
+    return kyc;
   }
 }

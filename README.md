@@ -7,20 +7,14 @@ bash ./setup.sh
 ## Installation (Development)
 
 ```bash
-$ npm install
+$ pnpm install
 ```
 
 ## Running the app
 
 ```bash
 # development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+$ pnpm start:local
 ```
 
 ## Test
@@ -176,7 +170,7 @@ The KYC module manages customer verification processes, including basic and addi
 
 1. **KYC Profile Management**
 
-   - Create, update, retrieve, and delete KYC profiles.
+   - Create, update, and retrieve KYC profiles.
    - Store user identification and address details with validation using `class-validator`.
 
 2. **Third-Party Integration**
@@ -186,35 +180,42 @@ The KYC module manages customer verification processes, including basic and addi
      - Webhook verification using HMAC-based signatures.
    - Automatically updates KYC statuses based on Sumsub reviews (e.g., `APPROVED`, `PENDING`, or `REJECTED`).
 
-3. **Basic and Additional POA Levels**
-
-   - Differentiates between basic and additional KYC levels.
-   - Ensures basic KYC approval before additional KYC requests.
-
-4. **Batch Processing**
-
-   - Request additional KYC for multiple users in batch mode.
-   - Tracks successful and failed operations with detailed error reporting.
-
-5. **Delivery Address Update**
+3. **Delivery Address Update**
 
    - Automatically updates card delivery addresses across all orders when the KYC address is modified.
 
-6. **Database Integration**
+4. **Database Integration**
 
    - Uses TypeORM to manage KYC records and relationships with the `User` entity.
    - Stores details in a JSONB format for flexible data handling.
 
-7. **Error Handling**
+5. **Error Handling**
 
    - Comprehensive error and exception management for missing records or invalid operations.
 
-8. **API Endpoints**
-   - `POST /kyc/profile`: Create a new KYC profile.
-   - `PATCH /kyc/profile/:id`: Update an existing profile.
-   - `GET /kyc/:id`: Retrieve a specific KYC record.
-   - `PUT /kyc/request-additional/:userId`: Request additional KYC verification.
-   - `PUT /kyc/request-additional/batch`: Batch request for additional KYC.
+6. **API Endpoints**
+   - `POST /user/kyc/profile`: Create a new KYC profile.
+   - `PATCH /user/kyc/:id`: Update an existing KYC.
+   - `GET /user/kyc/:id`: Retrieve a specific KYC record.
+
+# Axysbank Account KYC Process Flow
+
+1. Initial KYC Verification
+
+- kyc.basicPoaKycLevel: false
+- user.kycStatus: Not Passed
+
+2. KYC Approval (via webhook)
+
+- Updates to:
+  - kyc.basicPoaKycLevel: true
+  - user.kycStatus: approved
+
+3. KYC Rejection (via webhook)
+
+- Updates to:
+  - kyc.basicPoaKycLevel: false
+  - user.kycStatus: rejected
 
 ## Third-Party Webhook Example
 
@@ -232,10 +233,6 @@ Webhook signatures are validated using:
 - A shared secret key (`SUMSUB_WEBHOOK_SECRET`).
 - Supported hash algorithms (`sha1`, `sha256`, `sha512`).
 
-## Delivery Address Update Example
-
-When the KYC address is updated, the module automatically updates delivery addresses for all associated card orders.
-
 ## Database Schema
 
 The `KYC` entity uses the following structure:
@@ -243,9 +240,13 @@ The `KYC` entity uses the following structure:
 - `id`: Primary Key.
 - `userId`: Associated user ID.
 - `firstName`, `lastName`, `middleName`: User name details.
+- `dob`: yyyy-mm-dd - Date of birth.
+- `gender`: enum - Male: 0, Female: 1.
+- `placeOfBirth`: alpha-2 code - Place Of Birth.
 - `address`: JSONB format for storing address information.
-- `basicPoaKycLevel` and `additionalPoaKycLevel`: Boolean flags for KYC levels.
-- `basicPoaDetails` and `additionalPoaDetails`: JSONB format for additional data.
+- `contact`: JSONB format for storing contact information.
+- `basicPoaKycLevel`: Boolean flags for KYC levels.
+- `basicPoaDetails`: JSONB format for additional data.
 - `date`: Timestamp for the latest update.
 
 ## Error Handling

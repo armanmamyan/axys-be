@@ -4,3 +4,8 @@ export enum KycStatus {
   APPROVED = 'approved',
   REJECTED = 'rejected',
 }
+
+export enum Gender {
+  MALE = 0,
+  FEMALE = 1,
+}

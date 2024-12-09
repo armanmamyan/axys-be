@@ -1,5 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { User } from '@/users/entities/user.entity';
+import { Gender } from '../enums';
+import { IsEnum } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 @Entity()
 export class KYC {
@@ -21,8 +24,34 @@ export class KYC {
   @Column()
   middleName: string;
 
-  @Column({ type: 'jsonb', nullable: true })
+  @IsEnum(Gender)
+  @Column({
+    type: 'enum',
+    enum: Gender,
+  })
+  gender: Gender;
+
+  @Column()
+  placeOfBirth: string;
+
+  // date-of-birth
+  @Column({
+    type: 'date',
+    name: 'dob',
+  })
+  @Transform(({ value }) => {
+    if (value instanceof Date) {
+      return value.toISOString().split('T')[0];
+    }
+    return value;
+  })
+  dob: string;
+
+  @Column({ type: 'jsonb' })
   address: any;
+
+  @Column({ type: 'jsonb' })
+  contact: any;
 
   @OneToOne(() => User, (user) => user.kyc)
   @JoinColumn()
@@ -34,14 +63,8 @@ export class KYC {
   @Column()
   basicPoaKycLevel: boolean;
 
-  @Column()
-  additionalPoaKycLevel: boolean;
-
   @Column({ type: 'jsonb', nullable: true })
   basicPoaDetails: any;
-
-  @Column({ type: 'jsonb', nullable: true })
-  additionalPoaDetails: any;
 
   @Column()
   date: Date;

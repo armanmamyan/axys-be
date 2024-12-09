@@ -190,7 +190,7 @@ export class UserController {
   @Post('/fireblocks/notify')
   async FIREBLOCKS_WEBHOOK_SETUP(@Req() req) {
     try {
-      if(req.body.data?.status === 'COMPLETED') {
+      if (req.body.data?.status === 'COMPLETED') {
         await this.fireblocksService.triggerEmailNotification(req.body);
       }
     } catch (error) {
@@ -265,9 +265,6 @@ export class UserController {
       if (levelName === 'basic-poa-kyc-level') {
         updateData.basicPoaKycLevel = isApproved;
         updateData.basicPoaDetails = payload;
-      } else if (levelName === 'additional-poa-kyc-level') {
-        updateData.additionalPoaKycLevel = isApproved;
-        updateData.additionalPoaDetails = payload;
       }
 
       await this.kycService.update(existingKyc.id, updateData);
@@ -275,23 +272,21 @@ export class UserController {
       throw new BadRequestException('KYC profile not found. Please create profile first.');
     }
 
-    const updatedKyc = await this.kycService.findByUserId(externalUserId);
-    let kycStatus: KycStatus;
+    const user = await this.userService.findById(externalUserId);
+    if (!user) throw new BadRequestException(`User not found with ID: ${externalUserId}`);
 
-    if (levelName === 'basic-poa-kyc-level') {
-      kycStatus = isApproved ? KycStatus.APPROVED : KycStatus.REJECTED;
-    } else if (levelName === 'additional-poa-kyc-level') {
-      if (!updatedKyc.basicPoaKycLevel) {
-        kycStatus = KycStatus.PENDING;
-      } else {
+    if (user.kycStatus !== KycStatus.APPROVED) {
+      let kycStatus: KycStatus;
+
+      if (levelName === 'basic-poa-kyc-level') {
         kycStatus = isApproved ? KycStatus.APPROVED : KycStatus.REJECTED;
       }
-    }
 
-    if(isApproved) {
-      await this.userService.createFireblocksAccountForUser(Number(externalUserId));
+      if (isApproved) {
+        await this.userService.createFireblocksAccountForUser(Number(externalUserId));
+      }
+      await this.userService.updateKycStatus(externalUserId, kycStatus);
     }
-    await this.userService.updateKycStatus(externalUserId, kycStatus);
   }
 
   private async handleApplicantPending(payload: SumsubWebhookPayload) {
@@ -306,8 +301,6 @@ export class UserController {
 
       if (levelName === 'basic-poa-kyc-level') {
         updateData.basicPoaDetails = payload;
-      } else if (levelName === 'additional-poa-kyc-level') {
-        updateData.additionalPoaDetails = payload;
       }
 
       await this.kycService.update(existingKyc.id, updateData);

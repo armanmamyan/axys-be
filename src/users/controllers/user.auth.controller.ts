@@ -155,10 +155,13 @@ export class UserAuthController {
     const kycData = {
       userId: user.id.toString(),
       basicPoaKycLevel: false,
-      additionalPoaKycLevel: false,
       firstName: profileDto.firstName,
       lastName: profileDto.lastName,
       middleName: profileDto.middleName,
+      gender: profileDto.gender,
+      dob: profileDto.dob,
+      contact: profileDto.contact,
+      placeOfBirth: profileDto.placeOfBirth,
       address: profileDto.address,
       date: new Date(),
     };
@@ -184,19 +187,19 @@ export class UserAuthController {
     return this.kycService.update(id, applicantId);
   }
 
-  @Patch('/kyc/profile/:id')
-  async updateProfile(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() profileDto: ProfileDto
-  ): Promise<KYC> {
+  @Patch('/kyc/:id')
+  async updateKyc(@Param('id', ParseIntPipe) id: number, @Body() body: Partial<KYC>): Promise<KYC> {
     const existingKyc = await this.kycService.findOne(id);
     if (!existingKyc) {
-      throw new NotFoundException(`KYC record with ID ${id} not found`);
+      throw new BadRequestException('KYC profile not found');
     }
 
-    await this.userService.updateKycStatus(existingKyc.userId, KycStatus.REJECTED);
+    // FIXME: This should be removed after all before-mvp orders is shipped
+    if (body.address) {
+      await this.ordersService.updateDeliveryAddress(Number(existingKyc.userId), body.address);
+    }
 
-    return this.kycService.update(id, profileDto);
+    return this.kycService.update(existingKyc.id, body);
   }
 
   @Get('/kyc/:id')
@@ -216,80 +219,5 @@ export class UserAuthController {
   @Delete('/kyc/:id')
   async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.kycService.delete(id);
-  }
-
-  @Put('/kyc/request-additional/:userId')
-  async requestAdditionalKyc(@Param('userId') userId: string): Promise<KYC> {
-    try {
-      const existingKyc = await this.kycService.findByUserId(userId);
-
-      if (!existingKyc) {
-        throw new BadRequestException('KYC record not found');
-      }
-
-      if (!existingKyc.basicPoaKycLevel) {
-        throw new BadRequestException(
-          'Basic KYC must be approved before requesting additional KYC'
-        );
-      }
-
-      const updateData: Partial<KYC> = {
-        additionalPoaKycLevel: false,
-        additionalPoaDetails: null,
-        date: new Date(),
-      };
-
-      await this.kycService.update(existingKyc.id, updateData);
-      await this.userService.updateKycStatus(userId, KycStatus.PENDING);
-
-      return await this.kycService.findByUserId(userId);
-    } catch (error) {
-      throw new BadRequestException(`Error requesting additional KYC: ${error.message}`);
-    }
-  }
-
-  @Put('/kyc/request-additional/batch')
-  async requestAdditionalKycBatch(@Body() userIds: string[]): Promise<{
-    success: string[];
-    failed: { userId: string; reason: string }[];
-  }> {
-    const results = {
-      success: [],
-      failed: [],
-    };
-
-    for (const userId of userIds) {
-      try {
-        const existingKyc = await this.kycService.findByUserId(userId);
-
-        if (!existingKyc) {
-          results.failed.push({ userId, reason: 'KYC record not found' });
-          continue;
-        }
-
-        if (!existingKyc.basicPoaKycLevel) {
-          results.failed.push({ userId, reason: 'Basic KYC not approved' });
-          continue;
-        }
-
-        const updateData: Partial<KYC> = {
-          additionalPoaKycLevel: false,
-          additionalPoaDetails: null,
-          date: new Date(),
-        };
-
-        await this.kycService.update(existingKyc.id, updateData);
-        await this.userService.updateKycStatus(userId, KycStatus.PENDING);
-
-        results.success.push(userId);
-      } catch (error) {
-        results.failed.push({
-          userId,
-          reason: `Error: ${error.message}`,
-        });
-      }
-    }
-
-    return results;
   }
 }

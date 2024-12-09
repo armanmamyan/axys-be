@@ -91,6 +91,30 @@ export class UsersService {
     };
   }
 
+  async findById(id: string) {
+    const userData = await this.usersRepository.findOne({
+      where: { id: Number(id) },
+      select: [
+        'avatar',
+        'email',
+        'id',
+        'kycStatus',
+        'name',
+        'surName',
+        'username',
+        'onBoarding',
+        'cardOrder',
+        'cards',
+        'stripeCustomerId',
+        'fireblocksVaultId',
+        'shortId',
+      ],
+      relations: ['cardOrder', 'kyc'],
+    });
+
+    return userData;
+  }
+
   async findByStripeCustomerId(customer: string): Promise<Partial<User>> {
     return await this.usersRepository.findOne({
       where: { stripeCustomerId: customer },
