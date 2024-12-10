@@ -23,8 +23,8 @@ class DeliveryAddressDto {
   city: string;
 
   @IsString()
-  @IsNotEmpty()
-  state: string;
+  @IsOptional()
+  state?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -37,6 +37,12 @@ class DeliveryAddressDto {
   @IsString()
   @IsOptional()
   optional: string;
+
+  validate() {
+    if (this.country === 'US' && !this.state) {
+      throw new Error('State is required for US addresses');
+    }
+  }
 }
 
 class PaymentDetailsDto {
