@@ -258,15 +258,3 @@ The KYC module includes robust error management for:
 - Invalid operations such as requesting additional KYC without basic KYC approval.
 
 This module is essential for maintaining compliance with KYC regulations and provides an extensible framework for customer verification.
-
-## How to upload/update keys to server environments
-
-- Compress the folder into a .tar.gz archive:
-```bash
-tar -czvf key.tar.gz key
-```
-- To Upload the folder to server, run s3-key-update.ts file
-```bash
-node ./s3-key-update.ts
-```
-- Done
