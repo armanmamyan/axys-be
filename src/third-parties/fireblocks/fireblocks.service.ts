@@ -77,7 +77,7 @@ export class FireblocksService {
         createVaultAccountRequest: {
           name: `${userId}_${userEmail}`,
           hiddenOnUI: false,
-          autoFuel: false,
+          autoFuel: true,
         },
       });
       return vault || null;
