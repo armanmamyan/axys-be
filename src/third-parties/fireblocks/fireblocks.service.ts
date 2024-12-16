@@ -255,7 +255,6 @@ export class FireblocksService {
       if (result?.data?.id) {
         return await this.getTransactionById(result?.data?.id);
       }
-      console.log(JSON.stringify(result, null, 2));
       return result;
     } catch (error) {
       console.error('Error during transaction', { error });

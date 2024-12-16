@@ -37,11 +37,8 @@ export class OrderListener {
       date,
       orderNumber: id,
       price: paymentReceipt.price,
-      // FIXME: /user/[userId]/apply-for-card/[orderId]/payment
-      orderLink: getTransactionExplorerURL(
-        Number(paymentReceipt.currentChain?.id),
-        paymentReceipt.hash
-      ),
+      // TODO: Orderlink should be redirection of user's transaction history page
+      orderLink: '#',
       itemName: `${cardCategory} ${cardType} | ${paymentPlan} Fee`,
     };
 

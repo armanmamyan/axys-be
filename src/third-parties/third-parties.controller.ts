@@ -27,7 +27,7 @@ export class ThirdPartiesController {
 
   @Get('/get-updated-balances')
   async getUpdatedBalances(@GetUser() user: User) {
-    return await this.fireblocksService.updateVaultAccountAssetBalance(user.fireblocksVaultId);
+    return await this.fireblocksService.getVaultAccountDetails(user.fireblocksVaultId);
   }
 
   @Get('/get-token-prices')
@@ -56,6 +56,22 @@ export class ThirdPartiesController {
       return await this.fireblocksService.processVaultAccountWithdraw(
         user.fireblocksVaultId,
         withdrawalDetails
+      );
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  @Post('/estimate-gas')
+  async estimateTxGas(
+    @GetUser() user: User,
+    @Body() txDetails: WithdrawalDetailsDto
+  ): Promise<any> {
+    try {
+      return await this.fireblocksService.getTransactionFee(
+        user.fireblocksVaultId,
+        txDetails
       );
     } catch (error) {
       console.log(error);

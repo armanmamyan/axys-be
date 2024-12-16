@@ -27,8 +27,9 @@ import * as crypto from 'crypto';
 import { KycStatus } from '@/kyc/enums';
 import { KYC } from '@/kyc/entities/kyc.entity';
 import { KycService } from '@/kyc/services/kyc.service';
-import { VaultAsset } from '@fireblocks/ts-sdk';
 import { FireblocksService } from '@/third-parties/fireblocks/fireblocks.service';
+import { AppGateway } from '@/app.gateway';
+
 interface SumsubWebhookPayload {
   applicantId: string;
   inspectionId: string;
@@ -57,6 +58,7 @@ export class UserController {
     private mailerService: MailerService,
     private stripeService: StripeService,
     private kycService: KycService,
+    private readonly appGateway: AppGateway,
     private fireblocksService: FireblocksService,
     private readonly eventEmitter: EventEmitter2
   ) {}
@@ -189,7 +191,13 @@ export class UserController {
   @Post('/fireblocks/notify')
   async FIREBLOCKS_WEBHOOK_SETUP(@Req() req) {
     try {
-      if (req.body.data?.status === 'COMPLETED') {
+      const source = req.body?.data?.source;
+      
+      if(source.name === 'External') {
+        const room = `user_${req.body?.data?.destination.id}`;
+        this.appGateway.sendStatusUpdate(room, req.body.data?.status, req.body);
+      }
+      if(req.body.data?.status === 'COMPLETED') {
         await this.fireblocksService.triggerEmailNotification(req.body);
       }
     } catch (error) {

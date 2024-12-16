@@ -13,6 +13,8 @@ import {
   Put,
   Patch,
   NotFoundException,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -32,6 +34,9 @@ import { ProfileDto } from '@/kyc/dto/create-profile.dto';
 import { KYC } from '@/kyc/entities/kyc.entity';
 import { KycStatus } from '@/kyc/enums';
 import { KycService } from '@/kyc/services/kyc.service';
+import { FireblocksService } from '@/third-parties/fireblocks/fireblocks.service';
+import { IwithdrawalDetails, TransferType } from '@/third-parties/fireblocks/types';
+import { CardOrderWithCryptoDto } from '../dto/card-order-crypto.dto';
 
 @Controller('user')
 @UseGuards(JwtAuthGuard)
@@ -45,7 +50,8 @@ export class UserAuthController {
     private authService: AuthService,
     private ordersService: OrdersService,
     private kycService: KycService,
-    private neogardenNftService: NeogardenNftService
+    private neogardenNftService: NeogardenNftService,
+    private fireblocksService: FireblocksService
   ) {}
 
   @Post('/update-user')
@@ -85,6 +91,55 @@ export class UserAuthController {
     return await this.ordersService.createOrder(userId, body);
   }
 
+  @Post('/process-card-order-crypto')
+  async processCardPaymentWithCrypto(@Body() body: CardOrderWithCryptoDto, @GetUser() user: User) {
+    try {
+      const orderDetails = await this.ordersService.getOrderById(Number(body.orderId));
+      const {
+        to: withdrawalAddress,
+        from,
+        price: amount,
+        assetId,
+      }: {
+        to: string;
+        from: string;
+        price: string;
+        assetId: string;
+      } = orderDetails.paymentReceipt;
+
+      const processPayment = await this.fireblocksService.processVaultAccountWithdraw(from, {
+        withdrawalAddress,
+        assetId,
+        amount,
+        type: TransferType.servicePayment,
+      } as IwithdrawalDetails);
+
+      if (processPayment?.id) {
+        const order = await this.ordersService.approveOrder(Number(body.orderId), {
+          transactionId: processPayment.id,
+          created: processPayment.createdBy,
+          amount: `$${processPayment.amountUSD}`,
+          amountInNativeToken: processPayment.amount,
+          quantity: 1,
+          customer: user.id,
+          hosted_invoice_url: '#',
+        });
+
+        return order;
+      }
+      throw new Error('Payment processing failed. No transaction ID returned.');
+    } catch (error) {
+      console.error('Error processing card payment with crypto:', error.message);
+      throw new HttpException(
+        {
+          status: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: error.message || 'Internal server error',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
   @Post('/update-card-order')
   async updateCardOrder(@Body() body: any) {
     return await this.ordersService.updateOrder(body);
@@ -94,10 +149,6 @@ export class UserAuthController {
   async approveApplyCard(@Body() body: ApproveOrderDto, @GetUser() user: User) {
     const { orderId, paymentReceipt } = body;
     const order = await this.ordersService.approveOrder(orderId, paymentReceipt);
-
-    if (order.user.id !== user.id) {
-      throw new BadRequestException('You are not authorized to approve this order');
-    }
 
     return order;
   }

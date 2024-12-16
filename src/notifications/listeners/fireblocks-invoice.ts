@@ -10,12 +10,11 @@ export class FireblocksListener {
 
   @OnEvent('fireblocks.depositted')
   async handleDepositEvent(invoice: any, email: string) {
-    console.log('Entered', { email });
     try {
        
-    const process =  await this.mailerService.sendMail({
+    await this.mailerService.sendMail({
       to: email,
-      subject: `Deposit #${invoice.id} Receipt.`,
+      subject: `Deposit #${invoice.data?.id} Receipt.`,
       template: 'deposit',
       context: {
         customerName: email,
@@ -35,9 +34,9 @@ export class FireblocksListener {
   @OnEvent('fireblocks.withdrawed')
   async handleWithdrawEvent(invoice: any, email: string) {
     try {
-      const process = await this.mailerService.sendMail({
+      await this.mailerService.sendMail({
         to: email,
-        subject: `Withdraw #${invoice.id} Receipt.`,
+        subject: `Withdraw #${invoice.data?.id} Receipt.`,
         template: 'withdraw',
         context: {
           customerName: email,
@@ -47,7 +46,6 @@ export class FireblocksListener {
           dateTime: new Date(invoice.data.createdAt),
         },
       });
-      console.log({ process });
     } catch (error) {
       console.error({ error })
       throw error

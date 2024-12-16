@@ -10,6 +10,7 @@ import { CardOrdersModule } from 'src/card-orders/card-orders.module';
 import { CardsModule } from 'src/card/card.module';
 import { TransactionsModule } from 'src/transactions/transaction.module';
 import { KYCModule } from '@/kyc/kyc.module';
+import { AppGateway } from '@/app.gateway';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { KYCModule } from '@/kyc/kyc.module';
     forwardRef(() => TransactionsModule),
     forwardRef(() => KYCModule),
   ],
-  providers: [UsersService],
+  providers: [UsersService, AppGateway],
   controllers: [UserController, UserAuthController],
   exports: [UsersService],
 })

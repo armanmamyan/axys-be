@@ -18,6 +18,7 @@ import { StripeModule } from '@golevelup/nestjs-stripe';
 import * as dotenv from 'dotenv';
 import { KYCModule } from './kyc/kyc.module';
 import { ThirdPartiesModule } from './third-parties/third-parties.module';
+import { AppGateway } from './app.gateway';
 dotenv.config();
 
 @Module({
@@ -51,6 +52,6 @@ dotenv.config();
     }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppGateway, AppService],
 })
 export class AppModule {}

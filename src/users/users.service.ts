@@ -8,8 +8,6 @@ import { OrderStatus } from '@/card-orders/enums';
 import { KycStatus } from '@/kyc/enums';
 
 import { FireblocksService } from '@/third-parties/fireblocks/fireblocks.service';
-// This should be a real class/interface representing a user entity
-// export type User = any;
 
 @Injectable()
 export class UsersService {

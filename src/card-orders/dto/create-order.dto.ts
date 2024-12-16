@@ -68,6 +68,11 @@ class PaymentReceiptDto {
   @IsNotEmpty()
   from: string;
 
+  @ValidateIf((o) => o.paymentType === PaymentType.CRYPTO)
+  @IsString()
+  @IsNotEmpty()
+  assetId: string;
+
   @IsInt()
   @IsNotEmpty()
   price: number;
