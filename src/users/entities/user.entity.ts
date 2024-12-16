@@ -3,7 +3,15 @@ import { Card } from 'src/card/entities/card.entity';
 import { Notification } from 'src/notifications/entities/notification.entity';
 import { CardOrder } from 'src/card-orders/entities/card-order.entity';
 import { Transaction } from 'src/transactions/entity/transactions.entity';
-import { BeforeInsert, Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  BeforeInsert,
+  Column,
+  Entity,
+  JoinColumn,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { PasswordReset } from '@/auth/entities/passwordReset.entity';
 import { KYC } from '@/kyc/entities/kyc.entity';
 import { randomBytes } from 'crypto';
@@ -33,6 +41,9 @@ export class User {
 
   @Column()
   password: string;
+
+  @Column({ default: false })
+  emailTwoFactorEnabled: boolean;
 
   @Column({ default: 'Not Passed' })
   kycStatus: string;

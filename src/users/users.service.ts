@@ -64,6 +64,7 @@ export class UsersService {
       select: [
         'avatar',
         'email',
+        'emailTwoFactorEnabled',
         'id',
         'kycStatus',
         'name',
@@ -119,6 +120,7 @@ export class UsersService {
       select: [
         'avatar',
         'email',
+        'emailTwoFactorEnabled',
         'id',
         'kycStatus',
         'name',
@@ -217,6 +219,7 @@ export class UsersService {
         select: [
           'avatar',
           'email',
+          'emailTwoFactorEnabled',
           'id',
           'kycStatus',
           'name',
@@ -248,6 +251,7 @@ export class UsersService {
         select: [
           'avatar',
           'email',
+          'emailTwoFactorEnabled',
           'id',
           'kycStatus',
           'name',

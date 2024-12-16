@@ -20,6 +20,7 @@ import { PasswordReset } from './entities/passwordReset.entity';
 import { randomBytes } from 'crypto';
 import { ConfigService } from '@nestjs/config';
 import { FireblocksService } from '@/third-parties/fireblocks/fireblocks.service';
+import { generateOtp } from '@/utils/generateOtp';
 
 @Injectable()
 export class AuthService {
@@ -71,7 +72,7 @@ export class AuthService {
         throw new ConflictException('Email already exists');
       }
 
-      const otp = Math.floor(100000 + Math.random() * 900000).toString(); // Generate 6-digit OTP
+      const otp = generateOtp(); // Generate 6-digit OTP
 
       // Store OTP with expiration (e.g., 10 minutes)
       const otpEntry = this.otpRepository.create({ email, otp });
@@ -157,6 +158,29 @@ export class AuthService {
     await this.passwordResetRepository.delete(passwordReset.id);
   }
 
+  async updateCurrentPassword(
+    email: string,
+    currentPassword: string,
+    newPassword: string
+  ): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isValid = compareSync(currentPassword, user.password);
+    if (!isValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const hashedPassword = hashSync(newPassword, 10);
+    user.password = hashedPassword;
+    await this.userRepository.save(user);
+
+    return { message: 'Password updated successfully.' };
+  }
+
   async verifyOtp(email: string, otp: string): Promise<{ verified: boolean }> {
     try {
       // Clean up expired OTPs
@@ -176,6 +200,67 @@ export class AuthService {
     }
   }
 
+  async initiateEmailChange(currentEmail: string, newEmail: string): Promise<{ sent: boolean }> {
+    const existingUser = await this.userservice.findUser(currentEmail);
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const emailExists = await this.userservice.findUser(newEmail);
+    if (emailExists) {
+      throw new ConflictException('Email already registered');
+    }
+
+    const otp = generateOtp();
+    const otpEntry = this.otpRepository.create({
+      email: newEmail,
+      otp,
+    });
+    await this.otpRepository.save(otpEntry);
+
+    await this.mailerService.sendMail({
+      to: newEmail,
+      subject: 'Email Change Verification',
+      template: 'email-change',
+      context: {
+        otp,
+        newEmail,
+      },
+    });
+
+    return { sent: true };
+  }
+
+  async verifyEmailChange(
+    currentEmail: string,
+    newEmail: string,
+    otp: string
+  ): Promise<{ success: boolean; token: string }> {
+    const minuteAgo = new Date(Date.now() - 1 * 60 * 1000);
+    await this.otpRepository.delete({ createdAt: LessThan(minuteAgo) });
+
+    const otpEntry = await this.otpRepository.findOne({
+      where: {
+        email: newEmail,
+        otp,
+      },
+    });
+
+    if (!otpEntry) {
+      throw new UnauthorizedException('Invalid or expired OTP');
+    }
+
+    await this.userRepository.update({ email: currentEmail }, { email: newEmail });
+    const newToken = await this.generateToken(newEmail);
+
+    await this.otpRepository.remove(otpEntry);
+
+    return {
+      success: true,
+      token: newToken,
+    };
+  }
+
   async login(signinDto: SigninDto): Promise<any> {
     const { email, password } = signinDto;
     // Validation Flag
@@ -193,6 +278,7 @@ export class AuthService {
     if (isOk) {
       // Get user information
       const userDetails = await this.userservice.findOne(email);
+      const username = userDetails.username;
 
       // Check if user exists
       if (userDetails == null) {
@@ -202,6 +288,25 @@ export class AuthService {
       // Check if the given password match with saved password
       const isValid = compareSync(password, userDetails.password);
       if (isValid) {
+        // Check if 2FA is enabled
+        if (userDetails.emailTwoFactorEnabled && process.env.STAGE !== 'local') {
+          const otp = generateOtp();
+          const otpEntry = this.otpRepository.create({ email, otp });
+          await this.otpRepository.save(otpEntry);
+
+          await this.mailerService.sendMail({
+            to: email,
+            subject: '2FA Login Verification',
+            template: 'login-2fa',
+            context: {
+              username,
+              otp,
+            },
+          });
+
+          return { requiresTwoFactor: true, email };
+        }
+
         // Generate JWT token
         const accessToken = await this.jwtService.sign({ email });
         const { password, ...userInformation } = userDetails;
@@ -220,5 +325,47 @@ export class AuthService {
     } else {
       throw new UnauthorizedException('Please check your login credentials');
     }
+  }
+
+  async verifyLoginOtp(email: string, otp: string): Promise<any> {
+    const minuteAgo = new Date(Date.now() - 1 * 60 * 1000);
+    await this.otpRepository.delete({ createdAt: LessThan(minuteAgo) });
+
+    const otpEntry = await this.otpRepository.findOne({
+      where: { email, otp },
+    });
+
+    if (!otpEntry) {
+      throw new UnauthorizedException('Invalid or expired OTP');
+    }
+
+    const userDetails = await this.userservice.findOne(email);
+    await this.otpRepository.remove(otpEntry);
+
+    const accessToken = await this.jwtService.sign({ email });
+    const { password, ...userInformation } = userDetails;
+
+    if (userInformation.fireblocksVaultId) {
+      const getAssetList = await this.fireblocksService.getVaultAccountDetails(
+        userInformation.fireblocksVaultId
+      );
+      return { ...userInformation, token: accessToken, assets: getAssetList.data.assets };
+    }
+
+    return { ...userInformation, token: accessToken };
+  }
+
+  async updateEmailTwoFactor(email: string, enabled: boolean): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.emailTwoFactorEnabled = enabled;
+    await this.userRepository.save(user);
+
+    return {
+      message: `Two factor authentication ${enabled ? 'enabled' : 'disabled'} successfully`,
+    };
   }
 }
