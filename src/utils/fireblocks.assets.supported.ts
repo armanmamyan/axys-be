@@ -6,6 +6,7 @@ export const SUPPORTED_ASSETS_LIST = [
     contractAddress: '',
     nativeAsset: 'AVAX',
     decimals: 18,
+    cmcID: 5805,
   },
   {
     id: 'BNB_BSC',
@@ -14,6 +15,7 @@ export const SUPPORTED_ASSETS_LIST = [
     contractAddress: '',
     nativeAsset: 'BNB_BSC',
     decimals: 18,
+    cmcID: 1839,
   },
   {
     id: 'BTC',
@@ -22,6 +24,7 @@ export const SUPPORTED_ASSETS_LIST = [
     contractAddress: '',
     nativeAsset: 'BTC',
     decimals: 8,
+    cmcID: 1,
   },
   {
     id: 'ETH',
@@ -30,6 +33,7 @@ export const SUPPORTED_ASSETS_LIST = [
     contractAddress: '',
     nativeAsset: 'ETH',
     decimals: 18,
+    cmcID: 1027,
   },
   {
     id: 'MATIC',
@@ -38,6 +42,7 @@ export const SUPPORTED_ASSETS_LIST = [
     contractAddress: '0x7D1AfA7B718fb893dB30A3aBc0Cfc608AaCfeBB0',
     nativeAsset: 'ETH',
     decimals: 18,
+    cmcID: 3890,
   },
   {
     id: 'SOL',
@@ -46,6 +51,7 @@ export const SUPPORTED_ASSETS_LIST = [
     contractAddress: '',
     nativeAsset: 'SOL',
     decimals: 9,
+    cmcID: 5426,
   },
   {
     id: 'USDT_ERC20',
@@ -54,6 +60,7 @@ export const SUPPORTED_ASSETS_LIST = [
     contractAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
     nativeAsset: 'ETH',
     decimals: 6,
+    cmcID: 825,
   },
 ];
 
@@ -156,6 +163,7 @@ export const SUPPORTED_ASSETS_LIST_TESTNET = [
     contractAddress: '',
     nativeAsset: 'AVAXTEST',
     decimals: 18,
+    cmcID: 5805,
   },
   {
     id: 'BNB_TEST',
@@ -164,6 +172,7 @@ export const SUPPORTED_ASSETS_LIST_TESTNET = [
     contractAddress: '',
     nativeAsset: 'BNB_TEST',
     decimals: 18,
+    cmcID: 1839,
   },
   {
     id: 'BTC_TEST',
@@ -172,6 +181,7 @@ export const SUPPORTED_ASSETS_LIST_TESTNET = [
     contractAddress: '',
     nativeAsset: 'BTC_TEST',
     decimals: 8,
+    cmcID: 1,
   },
   {
     id: 'ETH_TEST5',
@@ -180,6 +190,7 @@ export const SUPPORTED_ASSETS_LIST_TESTNET = [
     contractAddress: '',
     nativeAsset: 'ETH_TEST5',
     decimals: 18,
+    cmcID: 1027,
   },
   {
     id: 'SOL_TEST',
@@ -188,6 +199,16 @@ export const SUPPORTED_ASSETS_LIST_TESTNET = [
     contractAddress: '',
     nativeAsset: 'SOL_TEST',
     decimals: 9,
+    cmcID: 5426,
+  },
+  {
+    id: 'USDT_BSC_TEST',
+    name: 'Tether USD (Ethereum)',
+    type: 'ERC20',
+    contractAddress: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+    nativeAsset: 'ETH',
+    decimals: 6,
+    cmcID: 825,
   },
 ];
 

@@ -10,7 +10,7 @@ import {
 } from '@fireblocks/ts-sdk';
 import { readFileSync } from 'fs';
 import { ConfigService } from '@nestjs/config';
-import { SUPPORTED_ASSETS_LIST_TESTNET } from '@/utils/fireblocks.assets.supported';
+import { SUPPORTED_ASSETS_LIST_TESTNET, SUPPORTED_ASSETS_LIST } from '@/utils/fireblocks.assets.supported';
 import { IwithdrawalDetails } from './types';
 import { UsersService } from '@/users/users.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -28,7 +28,7 @@ export class FireblocksService {
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService
   ) {
-    this.fireblocksAssetList = SUPPORTED_ASSETS_LIST_TESTNET;
+    this.fireblocksAssetList = this.configService.get<string>('STAGE') !== 'prod' ? SUPPORTED_ASSETS_LIST_TESTNET : SUPPORTED_ASSETS_LIST;;
   }
 
   async onModuleInit() {
