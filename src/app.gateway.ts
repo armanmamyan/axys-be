@@ -13,7 +13,7 @@ dotenv.config();
 
 @WebSocketGateway({
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: '*',
     methods: ['GET', 'POST'],
     credentials: false,
   },
