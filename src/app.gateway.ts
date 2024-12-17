@@ -15,7 +15,7 @@ dotenv.config();
   cors: {
     origin: process.env.CLIENT_URL,
     methods: ['GET', 'POST'],
-    credentials: true,
+    credentials: false,
   },
 })
 export class AppGateway implements OnGatewayConnection, OnGatewayDisconnect {
