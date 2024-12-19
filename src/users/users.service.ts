@@ -5,6 +5,7 @@ import { User } from './entities/user.entity';
 import { StripeService } from '@/third-parties/stripe/stripe.service';
 import { OrdersService } from '@/card-orders/services/card-orders.service';
 import { OrderStatus } from '@/card-orders/enums';
+import { CardOrder } from '@/card-orders/entities/card-order.entity';
 import { KycStatus } from '@/kyc/enums';
 
 import { FireblocksService } from '@/third-parties/fireblocks/fireblocks.service';
@@ -14,6 +15,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly usersRepository: Repository<User>,
+    @InjectRepository(CardOrder)
+    private readonly cardOrderRepository: Repository<CardOrder>,
     private cardOrderService: OrdersService,
     private stripeService: StripeService,
     private fireblocksService: FireblocksService
@@ -203,7 +206,25 @@ export class UsersService {
 
       // Create the payment manually
       const manualPayment = await this.stripeService.processPayment(customerId, priceId, orderId);
-
+      // After Getting Payment Id, Update Card Order and store transactionId
+      await this.cardOrderRepository
+        .createQueryBuilder()
+        .update(CardOrder)
+        .set({
+          paymentReceipt: order?.paymentReceipt
+            ? {
+                ...order.paymentReceipt,
+                transactionId: manualPayment.id,
+              }
+            : {
+                transactionId: manualPayment.id,
+              },
+        })
+        .where({
+          id: orderId,
+        })
+        .returning('*')
+        .execute();
       await this.usersRepository.update({ id: user.id }, { subscriptionId: manualPayment.id });
 
       return manualPayment;

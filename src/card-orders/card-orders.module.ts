@@ -7,13 +7,15 @@ import { User } from 'src/users/entities/user.entity';
 import { Card } from 'src/card/entities/card.entity';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { NotificationsModule } from '@/notifications/notifications.module';
+import { ThirdPartiesModule } from '@/third-parties/third-parties.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([CardOrder, User]),
     CardsModule,
     NotificationsModule,
-    EventEmitterModule.forRoot()
+    EventEmitterModule.forRoot(),
+    forwardRef(() => ThirdPartiesModule),
   ],
   providers: [OrdersService],
   exports: [OrdersService]

@@ -18,10 +18,39 @@ export class StripeListener {
   async handleOrderCreatedEvent(invoice: any, email: string) {
     const amountInCents = invoice.amount_paid;
     const amountInDollars = (amountInCents / 100).toFixed(2);
+    const orderId = invoice.metadata.orderId;
+    const orderDetails = await this.cardOrderRepository.findOne({
+      where: {
+        id: orderId,
+      },
+    });
 
+    if (orderDetails.status !== OrderStatus.APPROVED) {
+      await this.cardOrderRepository
+        .createQueryBuilder()
+        .update(CardOrder)
+        .set({ 
+          status: OrderStatus.APPROVED, 
+          paymentReceipt: {
+            transactionId: invoice.id,
+            hosted_invoice_url: invoice.hosted_invoice_url,
+            paid: invoice.paid,
+            created: invoice.created,
+            amount: Number((invoice.total / 100).toFixed(2)),
+            quantity: 1,
+            customer: invoice.customer,
+            currency: invoice.currency,
+          } as any
+        })
+        .where({
+          id: orderId,
+        })
+        .returning('*')
+        .execute();
+    }
     await this.mailerService.sendMail({
       to: email,
-      subject: `Subscription #${invoice.id} Receipt.`,
+      subject: 'Your Payment Was Successful!',
       template: 'light-receipt-stripe',
       context: {
         email,
@@ -52,15 +81,12 @@ export class StripeListener {
 
     await this.mailerService.sendMail({
       to: email,
-      subject: `Subscription #${invoice.id} Receipt.`,
+      subject: 'Payment Unsuccessful: Please Review Your Details',
       template: 'light-receipt-failed-stripe',
       context: {
         email,
         date: new Date(invoice.created * 1000),
-        itemName: invoice.lines.data[0].description,
         orderTotal: amountInDollars,
-        orderLink: invoice.hosted_invoice_url,
-        orderNumber: invoice.id,
       },
     });
   }

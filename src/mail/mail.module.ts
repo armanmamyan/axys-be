@@ -10,7 +10,7 @@ dotenv.config();
     MailerModule.forRoot({
       transport: {
         host: 'smtp.sendgrid.net',
-        port: process.env.SMTP_PORT,
+        port: Number(process.env.SMTP_PORT || 587),
         auth: {
           user: 'apikey',
           pass: process.env.SMPT_KEY,

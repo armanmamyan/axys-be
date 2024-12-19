@@ -142,11 +142,9 @@ export class UserController {
         await this.handleSubscriptionResumed(event);
         break;
       case 'invoice.payment_failed':
-      case 'setup_intent.setup_failed':
         await this.handlePaymentFailed(event);
         break;
       case 'invoice.payment_succeeded':
-        // case 'payment_intent.succeeded':
         await this.handlePaymentSucceeded(event);
         break;
       case 'invoice.upcoming':
@@ -192,12 +190,12 @@ export class UserController {
   async FIREBLOCKS_WEBHOOK_SETUP(@Req() req) {
     try {
       const source = req.body?.data?.source;
-      
-      if(source.name === 'External') {
+
+      if (source.name === 'External') {
         const room = `user_${req.body?.data?.destination.id}`;
         this.appGateway.sendStatusUpdate(room, req.body.data?.status, req.body);
       }
-      if(req.body.data?.status === 'COMPLETED') {
+      if (req.body.data?.status === 'COMPLETED') {
         await this.fireblocksService.triggerEmailNotification(req.body);
       }
     } catch (error) {
