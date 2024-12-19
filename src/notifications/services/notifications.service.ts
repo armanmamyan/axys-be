@@ -12,13 +12,13 @@ export class NotificationsService {
     @InjectRepository(Notification)
     private notificationRepository: Repository<Notification>,
     private userService: UsersService,
-    private mailerService: MailerService,
+    private mailerService: MailerService
   ) {}
 
   async createNotification(
     userEmail: string,
     type: NotificationType,
-    message: string,
+    message: string
   ): Promise<Notification> {
     const user = await this.userService.findOne(userEmail);
     if (!user) {
@@ -37,9 +37,9 @@ export class NotificationsService {
 
   async markAsRead(notificationId: number): Promise<Notification> {
     const notification = await this.notificationRepository.findOne({
-        where: {
-            id: notificationId
-        }
+      where: {
+        id: notificationId,
+      },
     });
     if (!notification) {
       throw new Error('Notification not found');
@@ -48,38 +48,11 @@ export class NotificationsService {
     return await this.notificationRepository.save(notification);
   }
 
-  async sendEmailNotification(
-    userEmail: string,
-    subject: string,
-    message: string,
-  ) {
+  async sendEmailNotification(userEmail: string, subject: string, message: string) {
     await this.mailerService.sendMail({
       to: userEmail,
       subject,
       text: message,
-    });
-  }
-
-  async sendReceiptlNotification(
-    userEmail: string,
-    subject: string,
-    body: any
-  ) {
-    await this.mailerService.sendMail({
-      to: userEmail,
-      subject,
-      template: 'payment-receipt',
-      context: {
-        date: body.date,
-        deliveryAddress: body.deliveryAddress,
-        itemName: body.itemName,
-        quantity: 1,
-        price: body.price,
-        orderTotal: body.price * 1,
-        orderLink: body.hash,
-        orderNumber: body.orderNumber,
-        email: userEmail
-      },
     });
   }
 
@@ -89,5 +62,4 @@ export class NotificationsService {
       order: { createdAt: 'DESC' },
     });
   }
-
 }

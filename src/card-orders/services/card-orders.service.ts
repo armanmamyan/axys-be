@@ -6,7 +6,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { OrderStatus, PaymentPlan } from 'src/card-orders/enums';
 import { CreateOrderDto } from 'src/card-orders/dto/create-order.dto';
 import { User } from 'src/users/entities/user.entity';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { StripeService } from '@/third-parties/stripe/stripe.service';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -22,7 +21,6 @@ export class OrdersService {
     private cardOrderRepository: Repository<CardOrder>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    private readonly eventEmitter: EventEmitter2,
     private stripeService: StripeService,
     private readonly mailerService: MailerService,
     private configService: ConfigService
@@ -156,8 +154,6 @@ export class OrdersService {
     order.status = OrderStatus.APPROVED;
     order.paymentReceipt = paymentReceipt;
     await this.cardOrderRepository.save(order);
-
-    this.eventEmitter.emit('order.approved', order);
 
     return order;
   }
