@@ -37,6 +37,7 @@ import { KycService } from '@/kyc/services/kyc.service';
 import { FireblocksService } from '@/third-parties/fireblocks/fireblocks.service';
 import { IwithdrawalDetails, TransferType } from '@/third-parties/fireblocks/types';
 import { CardOrderWithCryptoDto } from '../dto/card-order-crypto.dto';
+import { OrderStatus } from '@/card-orders/enums';
 
 @Controller('user')
 @UseGuards(JwtAuthGuard)
@@ -107,7 +108,7 @@ export class UserAuthController {
         assetId: string;
       } = orderDetails.paymentReceipt;
 
-      const processPayment = await this.fireblocksService.processVaultAccountWithdraw(from, {
+      const processPayment = await this.fireblocksService.processVaultAccountCardPayment(from, {
         withdrawalAddress,
         assetId,
         amount,
@@ -115,14 +116,20 @@ export class UserAuthController {
       } as IwithdrawalDetails);
 
       if (processPayment?.id) {
-        const order = await this.ordersService.approveOrder(Number(body.orderId), {
-          transactionId: processPayment.id,
-          created: processPayment.createdBy,
-          amount: `$${processPayment.amountUSD}`,
-          amountInNativeToken: processPayment.amount,
-          quantity: 1,
-          customer: user.id,
-          hosted_invoice_url: '#',
+        const order = await this.ordersService.updateOrder({
+          orderId: Number(body.orderId),
+          status: OrderStatus.CONFIRMING,
+          paymentReceipt: {
+            transactionId: processPayment.id,
+            created: processPayment.createdBy,
+            assetId: processPayment.assetId,
+            blockInfo: processPayment.blockInfo ?? null,
+            networkFee: processPayment.networkFee ?? null,
+            amountInNativeToken: processPayment.amount,
+            quantity: 1,
+            customer: user.id,
+            hosted_invoice_url: '#',
+          }
         });
 
         return order;
@@ -270,5 +277,15 @@ export class UserAuthController {
   @Delete('/kyc/:id')
   async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.kycService.delete(id);
+  }
+
+  @Get('/request-transaction-verfication')
+  async requestTxVerification(@GetUser() user: User) {
+    return await this.authService.requestTxVerification(String(user.id));
+  }
+
+  @Post('/verify-transaction-otp')
+  async verifyTransaction(@Body() body: { otp: string }, @GetUser() user: User) {
+    return await this.authService.verifyTxOtp(user.email, body.otp);
   }
 }

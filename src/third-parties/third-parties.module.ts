@@ -5,10 +5,11 @@ import { StripeService } from './stripe/stripe.service';
 import { FireblocksService } from './fireblocks/fireblocks.service';
 import { CMCService } from './cmc/cmc.service';
 import { UsersModule } from '@/users/users.module';
+import { CardOrdersModule } from '@/card-orders/card-orders.module';
 
 @Module({
   controllers: [ThirdPartiesController],
-  imports: [forwardRef(() => UsersModule)],
+  imports: [forwardRef(() => UsersModule), forwardRef(() => CardOrdersModule)],
   providers: [NeogardenNftService, StripeService, FireblocksService, CMCService],
   exports: [NeogardenNftService, StripeService, FireblocksService, CMCService],
 })

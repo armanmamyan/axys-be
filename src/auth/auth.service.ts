@@ -199,7 +199,7 @@ export class AuthService {
       throw error;
     }
   }
-
+  
   async initiateEmailChange(currentEmail: string, newEmail: string): Promise<{ sent: boolean }> {
     const existingUser = await this.userservice.findUser(currentEmail);
     if (!existingUser) {
@@ -229,6 +229,49 @@ export class AuthService {
     });
 
     return { sent: true };
+  }
+
+  async requestTxVerification(id: string): Promise<{ sent: boolean }> {
+    const existingUser = await this.userservice.findById(id);
+    if (!existingUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    const otp = generateOtp();
+    const otpEntry = this.otpRepository.create({
+      email: existingUser.email,
+      otp,
+    });
+    await this.otpRepository.save(otpEntry);
+
+    await this.mailerService.sendMail({
+      to: existingUser.email,
+      subject: 'Withdraw Verification',
+      template: 'withdraw-verification',
+      context: {
+        otp,
+        newEmail: existingUser.email,
+      },
+    });
+
+    return { sent: true };
+  }
+  
+  async verifyTxOtp(email: string, otp: string): Promise<{ success: boolean; }> {
+    const minuteAgo = new Date(Date.now() - 1 * 60 * 1000);
+    await this.otpRepository.delete({ createdAt: LessThan(minuteAgo) });
+
+    const otpEntry = await this.otpRepository.findOne({
+      where: { email, otp },
+    });
+
+    if (!otpEntry) {
+      throw new UnauthorizedException('Invalid or expired OTP');
+    }
+
+    await this.otpRepository.remove(otpEntry);
+
+    return {success: true };
   }
 
   async verifyEmailChange(

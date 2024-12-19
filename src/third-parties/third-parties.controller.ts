@@ -47,13 +47,29 @@ export class ThirdPartiesController {
     }
   }
 
+  @Post('/get-transaction-fee')
+  async getTransactionFee(
+    @GetUser() user: User,
+    @Body() withdrawalDetails: WithdrawalDetailsDto
+  ) : Promise<any> {
+    try {
+      return await this.fireblocksService.getTransactionFee(
+        user.fireblocksVaultId,
+        withdrawalDetails
+      );
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
   @Post('/withdraw-funds')
   async processWithdrawal(
     @GetUser() user: User,
     @Body() withdrawalDetails: WithdrawalDetailsDto
   ): Promise<any> {
     try {
-      return await this.fireblocksService.processVaultAccountWithdraw(
+      return await this.fireblocksService.processExternalWithdrawTransaction(
         user.fireblocksVaultId,
         withdrawalDetails
       );

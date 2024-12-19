@@ -12,6 +12,8 @@ import { StripeService } from '@/third-parties/stripe/stripe.service';
 import { MailerService } from '@nestjs-modules/mailer';
 import { Parser } from 'json2csv';
 import { AddressDto } from '@/kyc/dto/create-profile.dto';
+import { PaymentType } from '@/transactions/enums';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class OrdersService {
@@ -22,7 +24,8 @@ export class OrdersService {
     private userRepository: Repository<User>,
     private readonly eventEmitter: EventEmitter2,
     private stripeService: StripeService,
-    private readonly mailerService: MailerService
+    private readonly mailerService: MailerService,
+    private configService: ConfigService
   ) {}
 
   async createOrder(userId: number, createOrderDto: CreateOrderDto): Promise<Partial<CardOrder>> {
@@ -40,6 +43,12 @@ export class OrdersService {
       user,
       status: OrderStatus.PENDING,
       date: new Date(),
+      paymentReceipt: createOrderDto.paymentType === PaymentType.CRYPTO ?  {
+        ...createOrderDto.paymentReceipt,
+        to: this.configService.get<string>('FB_FEE_ACCOUNT') || '1',
+      } : {
+        ...createOrderDto.paymentReceipt
+      }
     });
 
     const nextPaymentDate = new Date(order.date);
@@ -210,6 +219,16 @@ export class OrdersService {
         id: orderId,
       },
     });
+  }
+
+  async getOrderByCryptoTxId(orderId: string): Promise<CardOrder> {
+    return this.cardOrderRepository.findOne({
+      where: {
+        paymentReceipt: {
+          transactionId: orderId
+        }
+      }
+    })
   }
 
   async autoUpdateOrder(order: CardOrder): Promise<CardOrder> {
