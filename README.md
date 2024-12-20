@@ -259,9 +259,6 @@ The KYC module includes robust error management for:
 
 This module is essential for maintaining compliance with KYC regulations and provides an extensible framework for customer verification.
 
-
-
-
 # Fireblocks Integration Guide
 
 ### Function Explanations
@@ -346,3 +343,71 @@ This module is essential for maintaining compliance with KYC regulations and pro
         
 
 In general, **vault accounts** are recommended for end-user or high-security situations due to the transparency and security Fireblocks provides, whereas **omnibus accounts** can be more flexible for managing liquidity but require careful internal accounting and risk management.
+# VisaService Integration
+#### The VisaService class provides a unified interface for interacting with the Visa-related APIs. It abstracts the complexity of individual endpoints by offering typed methods, error handling, and logging. This makes it easier to maintain, test, and integrate with downstream services.
+
+# Key Features
+- Generic Request Factory: A single private #requestFactory method handles GET, POST, PUT, and DELETE requests, reducing code duplication and simplifying maintenance.
+- Typed Responses: The service methods return typed responses (via *.d.ts or ./types imports), providing clarity and type safety.
+- Error Handling: Non-2xx HTTP responses raise InternalServerErrorException, ensuring that upstream code can handle failures gracefully.
+- Logging: Uses NestJS’s Logger to log request initiation, successful operations, and errors, aiding in debugging and monitoring.
+- Config-Driven: Reads VISA_API_URL, VISA_API_KEY, VISA_MASTER_ACCOUNT, and VISA_MASTER_WALLET from the ConfigService, making it straightforward to change environments or credentials without code modifications.
+
+
+# Highlights of Available Methods
+-------------------------------
+
+*   **Cardholder Management**:
+    
+    *   createCardHolder(accountId, walletId, cardHolderData): Create a new cardholder.
+        
+    *   addKycDoc(accountId, cardHolderId, docData): Add KYC documents to a cardholder.
+        
+    *   submitForReview(accountId, cardHolderId): Submit cardholder KYC for review.
+        
+    *   deleteKycDocs(accountId, cardHolderId): Delete existing KYC documents.
+        
+    *   viewPhysicalCardHolder(accountId, cardholderId): Retrieve cardholder details.
+        
+    *   createCardholderWithCard(accountId, walletId, cardholderData, kycDocs): High-level orchestrator that creates a cardholder, attaches KYC docs, submits for review, and then creates a card.
+        
+*   **Card Management**:
+    
+    *   createNewCard(accountId, walletId, cardHolderId): Create a new physical card for a cardholder.
+        
+    *   createNewCardReloadable(accountId, walletId, cardHolderId): Create a new reloadable (digital) card.
+        
+    *   viewCardDetails(accountId, walletId, cardId): View card details including number, expiry, and CVV.
+        
+    *   changeCardSpendLimit(accountId, walletId, cardId, spendLimit): Update the card's spend limit.
+        
+    *   viewCardTransactions(accountId, walletId, cardHolderId, cardId): Fetch the card’s transaction history.
+        
+    *   loadCard(accountId, walletId, cardHolderId, cardId, amountToLoad): Load funds onto a card.
+        
+    *   unloadCard(accountId, walletId, cardHolderId, cardId, amountToUnload): Unload funds from a card.
+        
+    *   viewCardBalance(accountId, walletId, cardHolderId, cardId): Check the card’s balance.
+        
+*   **Wallet Management**:
+    
+    *   viewWallet(accountId, walletId): View wallet details, including balances, sub-wallets, and services.
+        
+    *   walletTransfer(accountId, sourceWalletId, destinationWalletId, amount, description?): Transfer funds between wallets. If result is pending, viewTransferStatus can be used.
+        
+    *   viewTransferStatus(accountId, walletId, transId): Check the status of a previously initiated transfer.
+        
+
+Error Handling & Logging
+------------------------
+
+*   **Errors**:If the API call fails (non-2xx status), the method throws an InternalServerErrorException. Callers should try/catch these methods to handle errors gracefully.
+    
+*   **Logging**:Each method logs important steps, including when a request starts, succeeds, or fails. This logging helps trace issues in a production environment.
+    
+
+Extensibility
+-------------
+
+*   **Types**:All interfaces (INewCardholder, IKycNewDocRequest, INewCardResponse, IViewCardholder, IViewWallet, etc.) are imported from ./src/third-parties/visa/types. These can be extended or refined as the API evolves.
+   
