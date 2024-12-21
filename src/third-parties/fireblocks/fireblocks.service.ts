@@ -7,10 +7,13 @@ import {
   VaultAsset,
   TransferPeerPathType,
   TransactionResponse,
-  EstimatedTransactionFeeResponse,
+  TransactionFee,
 } from '@fireblocks/ts-sdk';
 import { ConfigService } from '@nestjs/config';
-import { SUPPORTED_ASSETS_LIST_TESTNET, SUPPORTED_ASSETS_LIST } from '@/utils/fireblocks.assets.supported';
+import {
+  SUPPORTED_ASSETS_LIST_TESTNET,
+  SUPPORTED_ASSETS_LIST,
+} from '@/utils/fireblocks.assets.supported';
 import { IwithdrawalDetails } from './types';
 import { UsersService } from '@/users/users.service';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -20,9 +23,10 @@ import { FEE_BRACKETS } from '@/utils/serviceFeeBrackets';
 import { OrdersService } from '@/card-orders/services/card-orders.service';
 import { OrderStatus } from '@/card-orders/enums';
 
-interface IFeeCalculator extends EstimatedTransactionFeeResponse {
+interface IFeeCalculator {
   assetId: string;
   amount: number;
+  high: TransactionFee;
 }
 
 @Injectable()
@@ -37,9 +41,12 @@ export class FireblocksService {
     @Inject(forwardRef(() => UsersService))
     private readonly userService: UsersService,
     private cmcService: CMCService,
-    private cardOrderService: OrdersService,
+    private cardOrderService: OrdersService
   ) {
-    this.fireblocksAssetList = this.configService.get<string>('STAGE') !== 'prod' ? SUPPORTED_ASSETS_LIST_TESTNET : SUPPORTED_ASSETS_LIST;;
+    this.fireblocksAssetList =
+      this.configService.get<string>('STAGE') !== 'prod'
+        ? SUPPORTED_ASSETS_LIST_TESTNET
+        : SUPPORTED_ASSETS_LIST;
   }
 
   async onModuleInit() {
@@ -204,8 +211,30 @@ export class FireblocksService {
 
   async getTransactionFee(vaultAccountId: string, withdrawalDetails: IwithdrawalDetails) {
     try {
-      const { amount, withdrawalAddress, assetId, type } = withdrawalDetails;
-      const payload = {
+      const { type, amount, withdrawalAddress, assetId } = withdrawalDetails;
+
+      const transferAsset = this.getTransferAsset(assetId);
+
+      // For USDT, need to get ETH price as well
+      const feeAsset = this.getFeeAsset(assetId);
+
+      const isUSDT = assetId === 'USDT_ERC20' || assetId === 'USDT_BSC_TEST';
+
+      // Get USD prices for both assets
+      const [transferAssetQuote, feeAssetQuote] = await Promise.all([
+        this.cmcService.getTokenLatestQuotes(transferAsset.cmcID.toString()),
+        this.cmcService.getTokenLatestQuotes(feeAsset.cmcID.toString()),
+      ]);
+
+      const transferAssetUSDPrice = transferAssetQuote?.quote?.USD.price;
+      const feeAssetUSDPrice = feeAssetQuote?.quote?.USD.price;
+
+      // Calculate service fee in USD and convert to transfer asset
+      const serviceFeeUSD = this.calculateServiceFee(Number(amount) * transferAssetUSDPrice);
+      const serviceFeeInTransferAsset = serviceFeeUSD / transferAssetUSDPrice;
+
+      // 1. Estimate transaction fee for user transfer
+      const userTransferPayload = {
         assetId,
         amount,
         source: {
@@ -220,23 +249,76 @@ export class FireblocksService {
                   address: withdrawalAddress,
                 },
               }
-            : {
-                type: TransferPeerPathType.VaultAccount,
-                id: withdrawalAddress,
-              },
+            : type === 'servicePayment'
+              ? {
+                  type: TransferPeerPathType.VaultAccount,
+                  id: this.configService.get<string>('FB_FEE_ACCOUNT'),
+                }
+              : {
+                  type: TransferPeerPathType.VaultAccount,
+                  id: withdrawalAddress,
+                },
       };
-      const result: { data: EstimatedTransactionFeeResponse } = await this.fireblocksInstanceSigner.transactions.estimateTransactionFee({
-        transactionRequest: payload,
-      });
 
-      return await this.calculateFeesToUsd({...result.data, assetId, amount: Number(amount)});;
+      // 2. Estimate transaction fee for service fee transfer
+      const serviceFeePayload = {
+        assetId,
+        amount: serviceFeeInTransferAsset,
+        source: {
+          type: TransferPeerPathType.VaultAccount,
+          id: String(vaultAccountId),
+        },
+        destination: {
+          type: TransferPeerPathType.VaultAccount,
+          id: this.configService.get<string>('FB_FEE_ACCOUNT'),
+        },
+      };
+
+      // Get fee estimates for both transactions
+      const [userTransferFee, serviceFee] = await Promise.all([
+        this.fireblocksInstanceSigner.transactions.estimateTransactionFee({
+          transactionRequest: userTransferPayload,
+        }),
+        this.fireblocksInstanceSigner.transactions.estimateTransactionFee({
+          transactionRequest: serviceFeePayload,
+        }),
+      ]);
+
+      // Calculate network fee
+      const networkFeeInFeeAsset =
+        Number(userTransferFee.data.high.networkFee * 1.1) +
+        Number(serviceFee.data.high.networkFee * 1.1);
+
+      const networkFeeUSD = networkFeeInFeeAsset * feeAssetUSDPrice;
+
+      return {
+        serviceFee: {
+          amountInAsset: serviceFeeInTransferAsset,
+          amountInUSD: serviceFeeUSD,
+          assetId: transferAsset.id,
+          assetUSDPrice: transferAssetUSDPrice,
+        },
+        networkFee: {
+          amountInAsset: networkFeeInFeeAsset,
+          amountInUSD: networkFeeUSD,
+          assetId: feeAsset.id,
+          assetUSDPrice: feeAssetUSDPrice,
+        },
+        totalFeeUSD: serviceFeeUSD + networkFeeUSD,
+      };
     } catch (error) {
-      console.error('Error calculating transaction fee', { data: error.response.data, error });
+      console.error('Error calculating total transaction fees', {
+        message: error.message,
+        details: error.response?.data,
+      });
       throw error;
     }
   }
 
-  async processVaultAccountCardPayment(vaultAccountId: string, withdrawalDetails: IwithdrawalDetails) {
+  async processVaultAccountCardPayment(
+    vaultAccountId: string,
+    withdrawalDetails: IwithdrawalDetails
+  ) {
     try {
       const { amount, withdrawalAddress, assetId, type } = withdrawalDetails;
 
@@ -275,7 +357,10 @@ export class FireblocksService {
   }
 
   // For Account Withdrawals
-  async processExternalWithdrawTransaction(vaultAccountId: string, withdrawalDetails: IwithdrawalDetails) {
+  async processExternalWithdrawTransaction(
+    vaultAccountId: string,
+    withdrawalDetails: IwithdrawalDetails
+  ) {
     try {
       const { amount, withdrawalAddress, assetId } = withdrawalDetails;
       const asset = this.fireblocksAssetList.find((item) => item.id === assetId);
@@ -283,8 +368,7 @@ export class FireblocksService {
       const assetUSDPrice = latestQuote?.quote?.USD.price;
       const calculatedServiceFee = this.calculateServiceFee(Number(amount) * assetUSDPrice);
       const serviceFeeInNativeAsset = calculatedServiceFee / assetUSDPrice;
-      const extractServiceFeeFromAmount = Number(amount) - serviceFeeInNativeAsset;
-      
+
       const serviceFeePayload = {
         assetId,
         amount: serviceFeeInNativeAsset,
@@ -293,12 +377,12 @@ export class FireblocksService {
           type: TransferPeerPathType.VaultAccount,
           id: String(vaultAccountId),
         },
-        destination:{
+        destination: {
           type: TransferPeerPathType.VaultAccount,
-          id: this.configService.get<string>('FB_FEE_ACCOUNT')
+          id: this.configService.get<string>('FB_FEE_ACCOUNT'),
         },
       };
-      
+
       // Process Service Fee Transaction
       await this.fireblocksInstanceSigner.transactions.createTransaction({
         transactionRequest: serviceFeePayload,
@@ -306,13 +390,13 @@ export class FireblocksService {
 
       const payload = {
         assetId,
-        amount: extractServiceFeeFromAmount,
+        amount: Number(amount),
         feeLevel: 'HIGH',
         source: {
           type: TransferPeerPathType.VaultAccount,
           id: String(vaultAccountId),
         },
-        destination:{
+        destination: {
           type: TransferPeerPathType.OneTimeAddress,
           oneTimeAddress: {
             address: withdrawalAddress,
@@ -427,20 +511,20 @@ export class FireblocksService {
         const txID = body?.data.id;
         const findCardOrder = await this.cardOrderService.getOrderByCryptoTxId(txID);
 
-        if(findCardOrder?.id) {
+        if (findCardOrder?.id) {
           await this.cardOrderService.updateOrder({
-              orderId: findCardOrder.id,
-              status: OrderStatus.APPROVED,
-              paymentReceipt: {
-                ...findCardOrder.paymentReceipt,
-                transactionHash: body?.data.txHash,
-              }
+            orderId: findCardOrder.id,
+            status: OrderStatus.APPROVED,
+            paymentReceipt: {
+              ...findCardOrder.paymentReceipt,
+              transactionHash: body?.data.txHash,
+            },
           });
           return;
         }
-        
+
         // If destination id is 1, it means service fee transaction;
-        if(destination.id === '1') return;
+        if (destination.id === '1') return;
 
         if (findUserByVaultId.id) {
           this.eventEmitter.emit('fireblocks.withdrawed', body, findUserByVaultId.email);
@@ -471,44 +555,49 @@ export class FireblocksService {
     }
   }
 
-  private async calculateFeesToUsd(feeObj: IFeeCalculator) {
-    if (isNaN(Number(feeObj?.high?.networkFee)) && isNaN(Number(feeObj?.medium?.networkFee))) {
-      throw new Error('Invalid network fee value.');
-    }
-
-    // Convert Fees to USD: Fee in USD = Fee in Native Token×Current Price in USD
-    const asset = this.fireblocksAssetList.find((item) => item.id === feeObj?.assetId);
-
+  private getTransferAsset(assetId: string) {
+    const asset = this.fireblocksAssetList.find((item) => item.id === assetId);
     if (!asset) {
-      throw new Error('Asset not found in supported assets list.');
+      throw new Error('Transfer asset not found in supported assets list.');
     }
+    return asset;
+  }
 
-    const latestQuote = await this.cmcService.getTokenLatestQuotes(asset.cmcID.toString());
-    const assetUSDPrice = latestQuote?.quote?.USD.price;
+  private getFeeAsset(assetId: string) {
+    if (assetId === 'USDT_BSC_TEST') {
+      const asset = this.fireblocksAssetList.find((item) => item.id === 'ETH_TEST5');
 
-    const txFee = Number(feeObj?.high?.networkFee) * assetUSDPrice;
-    const calculatedServiceFee = this.calculateServiceFee(feeObj?.amount * assetUSDPrice);
-
-    return {
-      networkFee: `$${txFee.toFixed(4)}`,
-      serviceFee: `$${calculatedServiceFee}`
-    };
+      if (!asset) {
+        throw new Error('ETH asset not found for fee calculation.');
+      }
+      return asset;
+    }
+    if (assetId === 'USDT_ERC20') {
+      const ethAsset = this.fireblocksAssetList.find((item) => item.id === 'ETH');
+      if (!ethAsset) {
+        throw new Error('ETH asset not found for fee calculation.');
+      }
+      return ethAsset;
+    }
+    return this.getTransferAsset(assetId);
   }
 
   /**
-  * calculateServiceFee - Determine the service fee based on withdrawable amount.
-  * 
-  * @param {number} amt - The withdrawable amount.
-  * @returns {number} The final service fee.
-  */
+   * calculateServiceFee - Determine the service fee based on withdrawable amount.
+   *
+   * @param {number} amt - The withdrawable amount.
+   * @returns {number} The final service fee.
+   */
   private calculateServiceFee(withdrawableAmount: number) {
     if (withdrawableAmount <= 0) return 0;
 
-    const bracket: any = FEE_BRACKETS.find(b => withdrawableAmount >= b.min && withdrawableAmount < b.max);
+    const bracket: any = FEE_BRACKETS.find(
+      (b) => withdrawableAmount >= b.min && withdrawableAmount < b.max
+    );
 
     if (!bracket) {
       // Fallback if none found; this theoretically shouldn’t happen if Infinity is used above
-      return 0; 
+      return 0;
     }
 
     if (typeof bracket.fixedFee === 'number') {
@@ -517,7 +606,6 @@ export class FireblocksService {
     } else if (typeof bracket?.percentFee === 'number') {
       // We have a percentage-based bracket (above 100K)
       return withdrawableAmount * bracket?.percentFee;
-    }   
-
+    }
   }
 }

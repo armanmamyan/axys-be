@@ -51,7 +51,7 @@ export class ThirdPartiesController {
   async getTransactionFee(
     @GetUser() user: User,
     @Body() withdrawalDetails: WithdrawalDetailsDto
-  ) : Promise<any> {
+  ): Promise<any> {
     try {
       return await this.fireblocksService.getTransactionFee(
         user.fireblocksVaultId,
@@ -85,10 +85,7 @@ export class ThirdPartiesController {
     @Body() txDetails: WithdrawalDetailsDto
   ): Promise<any> {
     try {
-      return await this.fireblocksService.getTransactionFee(
-        user.fireblocksVaultId,
-        txDetails
-      );
+      return await this.fireblocksService.getTransactionFee(user.fireblocksVaultId, txDetails);
     } catch (error) {
       console.log(error);
       throw error;
@@ -103,7 +100,12 @@ export class ThirdPartiesController {
     @Query('after') after: number
   ): Promise<any> {
     try {
-      return await this.fireblocksService.getCustomerTransactions(user.fireblocksVaultId, limit, before, after);
+      return await this.fireblocksService.getCustomerTransactions(
+        user.fireblocksVaultId,
+        limit,
+        before,
+        after
+      );
     } catch (error) {
       throw error;
     }
